@@ -15,4 +15,7 @@ $(EXEC): $(OBJS)
 	$(CC) -c $^ -o $@ $(CFLAGS)
 
 clean:
-	$(RM) $(EXEC) *.o
+	$(RM) $(OBJS)
+
+mrproper: clean
+	$(RM) $(EXEC)
