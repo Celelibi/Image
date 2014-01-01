@@ -6,7 +6,7 @@ LFLAGS=-L/usr/lib -lm -lGL -lglut
 
 EXEC=plot
 SRCS=$(wildcard *.c)
-OBJS=$(SRCS:.c=.o)
+OBJS=$(subst .c,.o,$(SRCS))
 
 $(EXEC): $(OBJS)
 	$(CC) $^ -o $@ $(LFLAGS)
