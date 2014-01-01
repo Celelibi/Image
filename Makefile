@@ -1,4 +1,5 @@
 CC=gcc
+RM=rm -f
 
 CFLAGS=-Wall
 LFLAGS=-L/usr/lib -lm -lGL -lglut
@@ -14,4 +15,4 @@ $(EXEC): $(OBJS)
 	$(CC) -c $^ -o $@ $(CFLAGS)
 
 clean:
-	/bin/rm $(EXEC) *.o
+	$(RM) $(EXEC) *.o
