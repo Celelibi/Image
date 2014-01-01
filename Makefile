@@ -1,7 +1,7 @@
 CC=gcc
 RM=rm -f
 
-CFLAGS=-Wall
+CFLAGS=-Wall -Wextra -std=c99
 LFLAGS=-L/usr/lib -lm -lGL -lglut
 
 EXEC=plot
