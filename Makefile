@@ -1,5 +1,3 @@
-
-
 CC=gcc
 
 CFLAGS=-Wall
@@ -9,11 +7,11 @@ EXEC=plot
 SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=.o)
 
-$(EXEC) : $(OBJS)
+$(EXEC): $(OBJS)
 	$(CC) $^ -o $@ $(LFLAGS)
 
-%.o : %.c
+%.o: %.c
 	$(CC) -c $^ -o $@ $(CFLAGS)
 
-clean :
+clean:
 	/bin/rm $(EXEC) *.o
