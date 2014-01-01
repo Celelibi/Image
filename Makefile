@@ -2,7 +2,7 @@ CC=gcc
 RM=rm -f
 
 CFLAGS=-Wall -Wextra -std=c99
-LFLAGS=-L/usr/lib -lm -lGL -lglut
+LFLAGS=-lm -lGL -lglut
 
 EXEC=plot
 SRCS=$(wildcard *.c)
