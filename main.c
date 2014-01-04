@@ -57,7 +57,7 @@ void display_CB()
 			I_bresenham(img, cursor->x, cursor->y, s_list->x, s_list->y);
 		}
 	}
-	if(!is_closed)
+
 	I_draw(img);
 
     glutSwapBuffers();
