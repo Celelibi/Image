@@ -43,7 +43,7 @@ Image* I_new(int width, int height)
 	img_new->_xoffset = 0;
 	img_new->_yoffset = 0;
 
-	img_new->_current_color = C_new(255, 255, 255);
+	img_new->_current_color = C_new(1.0, 1.0, 1.0);
 
 	/* FIXME: Column-base storage is bad for cache optimization */
 	img_new->_buffer = (Color**)calloc(width, sizeof(Color*));
