@@ -289,33 +289,6 @@ void I_draw(Image *img)
 
 //------------------------------------------------------------------------
 
-/*void I_bresenham(Image *img, int xA, int yA, int xB, int yB)
-{
-	int deltax = xB - xA;
-	int deltay = yB - yA;
-	int criteria = deltax;
-	int x, y = yA;
-
-	// Black background
-	//Color black = C_new(0,0,0);
-	//I_fill(img, black);
-
-	for(x = xA ; x < xB ; x++)
-	{
-		I_plot(img, x, y);
-
-		if(criteria > 0)
-		{
-			criteria = criteria - 2 * deltay;
-		}
-		else
-		{
-			criteria = criteria + 2 * (deltax - deltay);
-			y++;
-		}
-	}
-}*/
-
 void I_bresenham(Image *img, int xA, int yA, int xB, int yB)
 {
 	int dx = xB - xA;
