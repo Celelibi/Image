@@ -151,61 +151,60 @@ void special_CB(int key, int x, int y)
 
 int main(int argc, char **argv)
 {
-	if((argc!=3)&&(argc!=2))
+	int largeur, hauteur;
+	int windowPosX = 100, windowPosY = 100;
+
+	if (argc != 3 && argc != 2)
 	{
 		fprintf(stderr,"\n\nUsage \t: %s <width> <height>\nou",argv[0]);
 		fprintf(stderr,"\t: %s <ppmfilename> \n\n",argv[0]);
 		exit(1);
 	}
+
+	if (argc == 2)
+	{
+		img = I_read(argv[1]);
+		largeur = img->_width;
+		hauteur = img->_height;
+	}
 	else
 	{
-		int largeur, hauteur;
-		if(argc==2)
-		{
-			img = I_read(argv[1]);
-			largeur = img->_width;
-			hauteur = img->_height;
-		}
-		else
-		{
-			largeur = atoi(argv[1]);
-			hauteur = atoi(argv[2]);
-			img = I_new(largeur,hauteur);
+		largeur = atoi(argv[1]);
+		hauteur = atoi(argv[2]);
+		img = I_new(largeur,hauteur);
 
-			/*Color rouge = C_new(100,0,0);
-			Color blanc = C_new(200,200,255);
-			I_fill(img,blanc);
-			I_checker(img,rouge,50);*/
+		/*Color rouge = C_new(100,0,0);
+		Color blanc = C_new(200,200,255);
+		I_fill(img,blanc);
+		I_checker(img,rouge,50);*/
 
-			Color black = C_new(0,0,0);
-			I_fill(img, black);
-		}
-		int windowPosX = 100, windowPosY = 100;
-
-		glutInitWindowSize(largeur,hauteur);
-		glutInitWindowPosition(windowPosX,windowPosY);
-		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE );
-		glutInit(&argc, argv);
-		glutCreateWindow(argv[0]);
-
-		glViewport(0, 0, largeur, hauteur);
-
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-
-		glOrtho(0,largeur,0,hauteur,-1,1);
-
-		glutDisplayFunc(display_CB);
-		glutKeyboardFunc(keyboard_CB);
-		glutSpecialFunc(special_CB);
-		glutMouseFunc(mouse_CB);
-		// glutMotionFunc(mouse_move_CB);
-		// glutPassiveMotionFunc(passive_mouse_move_CB);
-
-		glutMainLoop();
-
-		return 0;
+		Color black = C_new(0,0,0);
+		I_fill(img, black);
 	}
+
+	glutInitWindowSize(largeur,hauteur);
+	glutInitWindowPosition(windowPosX,windowPosY);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE );
+	glutInit(&argc, argv);
+	glutCreateWindow(argv[0]);
+
+	glViewport(0, 0, largeur, hauteur);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glOrtho(0,largeur,0,hauteur,-1,1);
+
+	glutDisplayFunc(display_CB);
+	glutKeyboardFunc(keyboard_CB);
+	glutSpecialFunc(special_CB);
+	glutMouseFunc(mouse_CB);
+	// glutMotionFunc(mouse_move_CB);
+	// glutPassiveMotionFunc(passive_mouse_move_CB);
+
+	glutMainLoop();
+
+	return 0;
 }
