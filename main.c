@@ -21,7 +21,7 @@
 #include "draw.h"
 
 Image *img;
-struct sommet *s_list;
+struct vertex *v_list;
 
 int is_closed = 0;
 
@@ -36,18 +36,21 @@ void display_CB()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	/*I_bresenham(img, 0, 0, 100, 100);
-	  I_bresenham(img, 100, 100, 300, 200);
-	  I_bresenham(img, 300, 200, 400, 150);
-	  I_bresenham(img, 400, 150, 350, 90);
-	  I_bresenham(img, 350, 90, 0, 0);*/
+	Color black = C_new(0,0,0);
+	I_fill(img, black);
 
-	if(s_list != NULL) // Si on a au moins un sommet de placé...
+	/*segment_rasterize(img, 0, 0, 100, 100);
+	  segment_rasterize(img, 100, 100, 300, 200);
+	  segment_rasterize(img, 300, 200, 400, 150);
+	  segment_rasterize(img, 400, 150, 350, 90);
+	  segment_rasterize(img, 350, 90, 0, 0);*/
+
+	if(v_list != NULL) // Si on a au moins un sommet de placé...
 	{
-		struct sommet* cursor = s_list;
+		struct vertex* cursor = v_list;
 		while(cursor->next != NULL)
 		{
-			I_bresenham(img, cursor->x, cursor->y, cursor->next->x, cursor->next->y);
+			segment_rasterize(img, cursor->x, cursor->y, cursor->next->x, cursor->next->y);
 
 			cursor = cursor->next;
 		}
@@ -55,7 +58,7 @@ void display_CB()
 		if(is_closed)
 		{
 			// Relie le dernier élément au premier
-			I_bresenham(img, cursor->x, cursor->y, s_list->x, s_list->y);
+			segment_rasterize(img, cursor->x, cursor->y, v_list->x, v_list->y);
 		}
 	}
 
@@ -92,7 +95,7 @@ void mouse_CB(int button, int state, int x, int y)
 		}
 
 		printf("--> ajout du sommet %d, %d\n", x, y);
-		s_list = sommet_add(s_list, x, y);
+		v_list = polygon_append_vertex(v_list, x, y);
 	}
 
 	// Bouton droit...

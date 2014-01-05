@@ -1,28 +1,30 @@
 #ifndef DRAW_H
 #define DRAW_H
 
+#include "Image.h"
+
 /*
-* Structure de liste chaînée pour stocker des coordonnées !
+* Structure de liste chaînée pour stocker des coordonnées
 */
 
-struct sommet {
+struct vertex {
 	int x;
 	int y;
-	struct sommet* next;
+	struct vertex* next;
 };
 
 /*
-* Structure représentant un polygone
+* Structure de liste chaînée pour stocker une liste de points
 */
 
 struct polygon {
-	struct sommet* s_list;
-	int is_closed;
+	struct vertex* v_list;
+	int is_filled;
 	struct polygon* next;
 };
 
 /*
-* Structure de liste chaînée pour stocker une liste de polygones !
+* Liste de polygones
 */
 
 struct drawing {
@@ -33,9 +35,11 @@ struct drawing {
 * Des fonctions pour les gouverner tous, et dans la RAM les allouer...
 */
 
-struct sommet* sommet_add(struct sommet* list, int x, int y);
-struct sommet* sommet_get_last(struct sommet* list);
-struct sommet* sommet_remove(struct sommet* list, struct sommet* victim);
+struct vertex* polygon_append_vertex(struct vertex* list, int x, int y);
+struct vertex* polygon_remove_vertex(struct vertex* list, struct vertex* victim);
+void polygon_rasterize(struct polygon *p, Image *img);
+void drawing_rasterize(struct drawing *d, Image *img); 
+void segment_rasterize(Image *img, int xA, int yA, int xB, int yB);
 
 /*
 * À ajouter plus tard :

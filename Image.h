@@ -52,8 +52,6 @@ void I_move       (Image *img, int x, int y);
 
 void I_draw       (Image *img);
 
-void I_bresenham(Image *img, int xA, int yA, int xB, int yB);
-
 #endif
 
 
