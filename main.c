@@ -22,7 +22,7 @@
 
 Image *img;
 //struct vertex *v_list;
-struct drawing* drawing;
+struct drawing drawing;
 
 //int is_closed = 0;
 
@@ -46,7 +46,7 @@ void display_CB()
 	  segment_rasterize(img, 400, 150, 350, 90);
 	  segment_rasterize(img, 350, 90, 0, 0);*/
 
-	drawing_rasterize(drawing, img);
+	drawing_rasterize(&drawing, img);
 
 	/*if(v_list != NULL) // Si on a au moins un sommet de placé...
 	{
@@ -86,7 +86,7 @@ void mouse_CB(int button, int state, int x, int y)
 
 		// Bresenham entre le point cliqué et celui cliqué précédemment
 
-		if(drawing->p_list->is_closed)
+		if(drawing.p_list->is_closed)
 		{
 			printf("--> le polygone est fermé donc je ne fais rien\n");
 			return;
@@ -98,7 +98,7 @@ void mouse_CB(int button, int state, int x, int y)
 		}
 
 		printf("--> ajout du sommet %d, %d\n", x, y);
-		drawing->p_list->v_list = polygon_append_vertex(drawing->p_list->v_list, x, y);
+		drawing.p_list->v_list = polygon_append_vertex(drawing.p_list->v_list, x, y);
 	}
 
 	// Bouton droit...
@@ -126,8 +126,8 @@ void keyboard_CB(unsigned char key, int x, int y)
 	case 'Z': I_zoom(img, 0.5); break;
 	case 'i': I_zoomInit(img); break;
 	case 'c':
-		drawing->p_list->is_closed = !drawing->p_list->is_closed;
-		if(drawing->p_list->is_closed)
+		drawing.p_list->is_closed = !drawing.p_list->is_closed;
+		if(drawing.p_list->is_closed)
 			printf("Polygone fermé\n");
 		else
 			printf("Polygone réouvert\n");
