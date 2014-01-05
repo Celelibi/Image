@@ -1,6 +1,7 @@
 #include "draw.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*
 * Ajoute un sommet à une liste de sommets.
@@ -94,6 +95,35 @@ static struct vertex* polygon_get_last_vertex(struct vertex* list)
 	{
 		return NULL;
 	}
+}
+
+/*
+ * Ajoute un polygone vide à la fin de la liste et le renvoi
+ */
+void drawing_new_polygon(struct drawing *d)
+{
+	struct polygon *p, *last;
+
+	p = malloc(sizeof(*p));
+	if (p == NULL)
+	{
+		perror("malloc");
+		exit(EXIT_FAILURE);
+	}
+
+	memset(p, 0, sizeof(*p));
+
+	if (d->p_list == NULL) {
+		d->p_list = p;
+	} else {
+		last = d->p_list;
+		while (last->next != NULL)
+			last = last->next;
+
+		last->next = p;
+	}
+
+	d->p_active = p;
 }
 
 /*
@@ -306,4 +336,37 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 	}
 }
 
+void polygon_rasterize(struct polygon *p, Image *img)
+{
+	if(p->v_list != NULL) // Si on a au moins un sommet de placé...
+	{
+		struct vertex* cursor = p->v_list;
+		while(cursor->next != p->v_list)
+		{
+			segment_rasterize(img, cursor->x, cursor->y, cursor->next->x, cursor->next->y);
+
+			cursor = cursor->next;
+		}
+
+		if(p->is_closed)
+		{
+			// Relie le dernier élément au premier
+			segment_rasterize(img, cursor->x, cursor->y, p->v_list->x, p->v_list->y);
+		}
+	}
+}
+
+void drawing_rasterize(struct drawing *d, Image *img)
+{
+	struct polygon* p;
+	Color black = C_new(0,0,0);
+	I_fill(img, black);
+
+	p = d->p_list;
+	while(p != NULL)
+	{
+		polygon_rasterize(p, img);
+		p = p->next;
+	}
+}
 

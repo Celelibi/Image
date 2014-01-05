@@ -1,7 +1,7 @@
 CC=gcc
 RM=rm -f
 
-CFLAGS=-Wall -Wextra -std=c99
+CFLAGS=-Wall -Wextra -std=c99 -ggdb
 LFLAGS=-lm -lGL -lglut
 
 EXEC=plot

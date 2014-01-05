@@ -21,9 +21,10 @@
 #include "draw.h"
 
 Image *img;
-struct vertex *v_list;
+//struct vertex *v_list;
+struct drawing drawing;
 
-int is_closed = 0;
+//int is_closed = 0;
 
 //------------------------------------------------------------------
 //	C'est le display callback. A chaque fois qu'il faut
@@ -36,8 +37,8 @@ void display_CB()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	Color black = C_new(0,0,0);
-	I_fill(img, black);
+	/*Color black = C_new(0,0,0);
+	I_fill(img, black);*/
 
 	/*segment_rasterize(img, 0, 0, 100, 100);
 	  segment_rasterize(img, 100, 100, 300, 200);
@@ -45,7 +46,9 @@ void display_CB()
 	  segment_rasterize(img, 400, 150, 350, 90);
 	  segment_rasterize(img, 350, 90, 0, 0);*/
 
-	if(v_list != NULL) // Si on a au moins un sommet de placé...
+	drawing_rasterize(&drawing, img);
+
+	/*if(v_list != NULL) // Si on a au moins un sommet de placé...
 	{
 		struct vertex* cursor = v_list;
 		while(cursor->next != v_list)
@@ -60,7 +63,7 @@ void display_CB()
 			// Relie le dernier élément au premier
 			segment_rasterize(img, cursor->x, cursor->y, v_list->x, v_list->y);
 		}
-	}
+	}*/
 
 	I_draw(img);
 
@@ -83,7 +86,10 @@ void mouse_CB(int button, int state, int x, int y)
 
 		// Bresenham entre le point cliqué et celui cliqué précédemment
 
-		if(is_closed)
+		if (drawing.p_active == NULL)
+			drawing_new_polygon(&drawing);
+
+		if(drawing.p_active->is_closed)
 		{
 			printf("--> le polygone est fermé donc je ne fais rien\n");
 			return;
@@ -95,7 +101,7 @@ void mouse_CB(int button, int state, int x, int y)
 		}
 
 		printf("--> ajout du sommet %d, %d\n", x, y);
-		v_list = polygon_append_vertex(v_list, x, y);
+		drawing.p_active->v_list = polygon_append_vertex(drawing.p_active->v_list, x, y);
 	}
 
 	// Bouton droit...
@@ -123,8 +129,8 @@ void keyboard_CB(unsigned char key, int x, int y)
 	case 'Z': I_zoom(img, 0.5); break;
 	case 'i': I_zoomInit(img); break;
 	case 'c':
-		is_closed = !is_closed;
-		if(is_closed)
+		drawing.p_active->is_closed = !drawing.p_active->is_closed;
+		if(drawing.p_active->is_closed)
 			printf("Polygone fermé\n");
 		else
 			printf("Polygone réouvert\n");
