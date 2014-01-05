@@ -18,6 +18,7 @@ struct sommet {
 struct polygon {
 	struct sommet* s_list;
 	int is_closed;
+	struct polygon* next;
 };
 
 /*
