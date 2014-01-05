@@ -72,8 +72,7 @@ static int _isPpm(char *imagefilename)
 		int c2 = fgetc(imagefile);
 		fclose(imagefile);
 
-		if ((c1 == 'P') && (c2 == '6'))	return 1;
-		else						return 0;
+		return (c1 == 'P') && (c2 == '6');
 	}
 }
 
@@ -84,8 +83,10 @@ Image* I_read(char *imagefilename)
 	Image *img;
 	char command[100];
 
-	if (_isPpm(imagefilename))	sprintf(command, "cp %s input.ppm", imagefilename);
-	else					sprintf(command, "convert %s input.ppm", imagefilename);
+	if (_isPpm(imagefilename))
+		sprintf(command, "cp %s input.ppm", imagefilename);
+	else
+		sprintf(command, "convert %s input.ppm", imagefilename);
 
 	int stat = system(command);
 	if (stat != 0)
