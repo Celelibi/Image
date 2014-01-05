@@ -101,7 +101,7 @@ void mouse_CB(int button, int state, int x, int y)
 		}
 
 		printf("--> ajout du sommet %d, %d\n", x, y);
-		drawing.p_active->v_list = polygon_append_vertex(drawing.p_active->v_list, x, y);
+		polygon_append_vertex(drawing.p_active, x, y);
 	}
 
 	// Bouton droit...

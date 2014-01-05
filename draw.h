@@ -37,8 +37,8 @@ struct drawing {
 * Des fonctions pour les gouverner tous, et dans la RAM les allouer...
 */
 
-struct vertex* polygon_append_vertex(struct vertex* list, int x, int y);
-struct vertex* polygon_remove_vertex(struct vertex* list, struct vertex* victim);
+struct vertex* polygon_append_vertex(struct polygon* poly, int x, int y);
+struct vertex* polygon_remove_vertex(struct polygon* poly, struct vertex* victim);
 
 /* Ferme un polygone overt et inversement. Renvoi 1 si le polygone vient d'être fermé, 0 sinon. */
 int polygon_toggle_close(struct polygon* poly);

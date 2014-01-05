@@ -6,7 +6,7 @@
 /*
 * Ajoute un sommet à une liste de sommets.
 */
-struct vertex* polygon_append_vertex(struct vertex* list, int x, int y)
+struct vertex* polygon_append_vertex(struct polygon* poly, int x, int y)
 {
 	// Allocation
 	struct vertex* new = malloc(sizeof(*new));
@@ -16,11 +16,11 @@ struct vertex* polygon_append_vertex(struct vertex* list, int x, int y)
 	new->x = x;
 	new->y = y;
 
-	if(list != NULL)
+	if(poly->v_list != NULL)
 	{
 		// Ajout en fin de liste
-		struct vertex* cursor = list;
-		while(cursor->next != NULL && cursor->next != list)
+		struct vertex* cursor = poly->v_list;
+		while(cursor->next != NULL && cursor->next != poly->v_list)
 			cursor = cursor->next;
 
 		new->prev = cursor;
@@ -34,52 +34,29 @@ struct vertex* polygon_append_vertex(struct vertex* list, int x, int y)
 	{
 		// Je deviens la nouvelle tête de liste
 		// next et prev sont déjà NULL
-		list = new;
+		poly->v_list = new;
 	}
 
-	return list;
+	return new;
 }
 
 /*
 * Supprime un sommet de la liste.
 */
-struct vertex* polygon_remove_vertex(struct vertex* list, struct vertex* victim)
+struct vertex* polygon_remove_vertex(struct polygon* poly, struct vertex* victim)
 {
-	struct vertex* cursor = list;
+	/*
+	 * Le successeur de la victime devient la nouvelle tête de liste.
+	 */
+	if (poly->v_list == victim)
+		poly->v_list = poly->v_list->next;
 
-	if(cursor == victim) // Je suis le 1er élément de la liste
-	{
-		/*
-		* Le successeur de la victime devient la nouvelle tête de liste.
-		*/
+	if (victim->next != NULL)
+		victim->next->prev = victim->prev;
+	if (victim->prev != NULL)
+		victim->prev->next = victim->next;
 
-		struct vertex* newHead = cursor->next;
-		newHead->prev = victim->prev;
-		victim->prev->next = newHead;
-		free(victim);
-		return newHead;
-	}
-	else
-	{
-		do
-		{
-			if(cursor->next == victim)
-			{
-				/*
-				* La chaîne a->b->c devient a->c et on peut supprimer b.
-				*/
-
-				cursor->next = cursor->next->next; // tordu, n'est-ce pas ?
-				cursor->next->prev = cursor;
-				free(victim);
-
-				cursor = NULL; // sortie de boucle
-			}
-		}while(cursor != list);
-
-		// La tête de liste n'a pas changé !
-		return list;
-	}
+	return poly->v_list;
 }
 
 /*
