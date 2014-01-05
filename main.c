@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <GL/freeglut.h>
 #include <GL/glut.h>
 #include <GL/gl.h>
 
@@ -91,6 +92,9 @@ void mouse_CB(int button, int state, int x, int y)
 
 void keyboard_CB(unsigned char key, int x, int y)
 {
+	(void)x;
+	(void)y;
+
 	// fprintf(stderr,"key=%d\n",key);
 	switch(key)
 	{
@@ -126,6 +130,9 @@ void keyboard_CB(unsigned char key, int x, int y)
 
 void special_CB(int key, int x, int y)
 {
+	(void)x;
+	(void)y;
+
 	// int mod = glutGetModifiers();
 
 	int d = 10;
