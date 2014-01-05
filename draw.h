@@ -21,6 +21,7 @@ struct vertex {
 struct polygon {
 	struct vertex* v_list;
 	int is_filled;
+	int is_closed;
 	struct polygon* next;
 };
 
@@ -38,9 +39,10 @@ struct drawing {
 
 struct vertex* polygon_append_vertex(struct vertex* list, int x, int y);
 struct vertex* polygon_remove_vertex(struct vertex* list, struct vertex* victim);
+
+void segment_rasterize(Image *img, int xA, int yA, int xB, int yB);
 void polygon_rasterize(struct polygon *p, Image *img);
 void drawing_rasterize(struct drawing *d, Image *img); 
-void segment_rasterize(Image *img, int xA, int yA, int xB, int yB);
 
 /*
 * À ajouter plus tard :

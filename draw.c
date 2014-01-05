@@ -306,4 +306,35 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 	}
 }
 
+void polygon_rasterize(struct polygon *p, Image *img)
+{
+	if(p->v_list != NULL) // Si on a au moins un sommet de placé...
+	{
+		struct vertex* cursor = p->v_list;
+		while(cursor->next != p->v_list)
+		{
+			segment_rasterize(img, cursor->x, cursor->y, cursor->next->x, cursor->next->y);
+
+			cursor = cursor->next;
+		}
+
+		if(p->is_closed)
+		{
+			// Relie le dernier élément au premier
+			segment_rasterize(img, cursor->x, cursor->y, p->v_list->x, p->v_list->y);
+		}
+	}
+}
+
+void drawing_rasterize(struct drawing *d, Image *img)
+{
+	Color black = C_new(0,0,0);
+	I_fill(img, black);
+
+	while(d->p_list->next != NULL)
+	{
+		polygon_rasterize(d->p_list, img);
+		d->p_list = d->p_list->next;
+	}
+}
 
