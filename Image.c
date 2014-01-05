@@ -45,6 +45,7 @@ Image* I_new(int width, int height)
 
 	img_new->_current_color = C_new(255, 255, 255);
 
+	/* FIXME: Column-base storage is bad for cache optimization */
 	img_new->_buffer = (Color**)calloc(width, sizeof(Color*));
 
 	for (x = 0; x < width; x++)
@@ -89,6 +90,7 @@ Image* I_read(char *imagefilename)
 	char command[100];
 	Ppm ppm;
 
+	/* FIXME: security bugs: buffer overflow and shell escape */
 	if (_isPpm(imagefilename))
 		sprintf(command, "cp %s input.ppm", imagefilename);
 	else
@@ -113,6 +115,7 @@ Image* I_read(char *imagefilename)
 	int nb_bits = ppm->_nb_bits;
 	int valmax = ppm->_valmax;
 
+	/* FIXME: integer overflow exploitable with the double "for" loops below */
 	int nb_pixels = img->_width * img->_height;
 
 	if (nb_bits <= 8)
