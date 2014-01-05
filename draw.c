@@ -331,7 +331,7 @@ void drawing_rasterize(struct drawing *d, Image *img)
 	Color black = C_new(0,0,0);
 	I_fill(img, black);
 
-	while(d->p_list->next != NULL)
+	while(d->p_list != NULL)
 	{
 		polygon_rasterize(d->p_list, img);
 		d->p_list = d->p_list->next;
