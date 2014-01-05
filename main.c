@@ -21,7 +21,7 @@
 #include "draw.h"
 
 Image *img;
-sommet *s_list;
+struct sommet *s_list;
 
 int is_closed = 0;
 
@@ -44,7 +44,7 @@ void display_CB()
 
 	if(s_list != NULL) // Si on a au moins un sommet de placé...
 	{
-		sommet* cursor = s_list;
+		struct sommet* cursor = s_list;
 		while(cursor->next != NULL)
 		{
 			I_bresenham(img, cursor->x, cursor->y, cursor->next->x, cursor->next->y);
