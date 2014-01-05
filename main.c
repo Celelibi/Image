@@ -124,7 +124,7 @@ void keyboard_CB(unsigned char key, int x, int y)
 	// fprintf(stderr,"key=%d\n",key);
 	switch(key)
 	{
-	case 27: exit(EXIT_FAILURE); break;
+	case 27: glutLeaveMainLoop(); break;
 	case 'z': I_zoom(img, 2.0); break;
 	case 'Z': I_zoom(img, 0.5); break;
 	case 'i': I_zoomInit(img); break;
