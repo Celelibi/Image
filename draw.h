@@ -11,6 +11,7 @@ struct vertex {
 	int x;
 	int y;
 	struct vertex* next;
+	struct vertex* prev;
 };
 
 /*

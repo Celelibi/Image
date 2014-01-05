@@ -48,7 +48,7 @@ void display_CB()
 	if(v_list != NULL) // Si on a au moins un sommet de placé...
 	{
 		struct vertex* cursor = v_list;
-		while(cursor->next != NULL)
+		while(cursor->next != v_list)
 		{
 			segment_rasterize(img, cursor->x, cursor->y, cursor->next->x, cursor->next->y);
 
