@@ -1,6 +1,7 @@
 #include "draw.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*
 * Ajoute un sommet à une liste de sommets.
@@ -94,6 +95,35 @@ static struct vertex* polygon_get_last_vertex(struct vertex* list)
 	{
 		return NULL;
 	}
+}
+
+/*
+ * Ajoute un polygone vide à la fin de la liste et le renvoi
+ */
+void drawing_new_polygon(struct drawing *d)
+{
+	struct polygon *p, *last;
+
+	p = malloc(sizeof(*p));
+	if (p == NULL)
+	{
+		perror("malloc");
+		exit(EXIT_FAILURE);
+	}
+
+	memset(p, 0, sizeof(*p));
+
+	if (d->p_list == NULL) {
+		d->p_list = p;
+	} else {
+		last = d->p_list;
+		while (last->next != NULL)
+			last = last->next;
+
+		last->next = p;
+	}
+
+	d->p_active = p;
 }
 
 /*

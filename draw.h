@@ -31,6 +31,7 @@ struct polygon {
 
 struct drawing {
 	struct polygon* p_list;
+	struct polygon* p_active;
 };
 
 /*
@@ -39,6 +40,9 @@ struct drawing {
 
 struct vertex* polygon_append_vertex(struct vertex* list, int x, int y);
 struct vertex* polygon_remove_vertex(struct vertex* list, struct vertex* victim);
+
+/* Ajoute un polygone vide à la fin de la liste et le renvoi et le défini comme polygone actif */
+void drawing_new_polygon(struct drawing *d);
 
 void segment_rasterize(Image *img, int xA, int yA, int xB, int yB);
 void polygon_rasterize(struct polygon *p, Image *img);
