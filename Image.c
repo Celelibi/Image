@@ -4,6 +4,8 @@
   Image.c
 \*====================================================*/
 
+#include <stdlib.h>
+
 #include "Image.h"
 
 //------------------------------------------------------------------------
@@ -30,6 +32,7 @@ void C_check(Color c, char *message)
 
 Image* I_new(int width, int height)
 {
+	int x;
 	Image *img_new = (Image*)malloc(sizeof(Image));
 	img_new->_width = width;
 	img_new->_height = height;
@@ -44,7 +47,6 @@ Image* I_new(int width, int height)
 
 	img_new->_buffer = (Color**)calloc(width, sizeof(Color*));
 
-	int x;
 	for (x = 0; x < width; x++)
 		img_new->_buffer[x] = (Color*)calloc(height, sizeof(Color));
 
@@ -63,17 +65,20 @@ static void _plot(Image *img, int x, int y, Color c)
 static int _isPpm(char *imagefilename)
 {
 	FILE *imagefile;
+	int c1, c2;
+
 	imagefile = fopen(imagefilename, "r");
-	if (imagefile == NULL) {perror(imagefilename); exit(1); }
-
-	else
+	if (imagefile == NULL)
 	{
-		int c1 = fgetc(imagefile);
-		int c2 = fgetc(imagefile);
-		fclose(imagefile);
-
-		return (c1 == 'P') && (c2 == '6');
+		perror(imagefilename);
+		exit(EXIT_FAILURE);
 	}
+
+	c1 = fgetc(imagefile);
+	c2 = fgetc(imagefile);
+	fclose(imagefile);
+
+	return (c1 == 'P') && (c2 == '6');
 }
 
 //-----
@@ -82,6 +87,7 @@ Image* I_read(char *imagefilename)
 {
 	Image *img;
 	char command[100];
+	Ppm ppm;
 
 	if (_isPpm(imagefilename))
 		sprintf(command, "cp %s input.ppm", imagefilename);
@@ -92,60 +98,60 @@ Image* I_read(char *imagefilename)
 	if (stat != 0)
 	{
 		fprintf(stderr, "Convert : %s -> input.ppm impossible conversion.\n", imagefilename);
-		exit(1);
+		exit(EXIT_FAILURE);
+	}
+
+	ppm = PPM_nouv("input.ppm", PPM_LECTURE);
+	system("rm input.ppm");
+
+	fprintf(stderr, "%d x %d\n", PPM_largeur(ppm), PPM_hauteur(ppm));
+
+	if (ppm == NULL)
+		return NULL;
+
+	img = I_new(PPM_largeur(ppm), PPM_hauteur(ppm));
+	int nb_bits = ppm->_nb_bits;
+	int valmax = ppm->_valmax;
+
+	int nb_pixels = img->_width * img->_height;
+
+	if (nb_bits <= 8)
+	{
+		unsigned char *donnees = (unsigned char*)calloc(3*nb_pixels, sizeof(unsigned char));
+		PPM_lectureDonneesChar(ppm, donnees);
+
+		int x, y;
+		for (y = 0; y < img->_height; y++)
+		{
+			for (x = 0; x < img->_width; x++)
+			{
+				int indice = (img->_height - y) * img->_width + x;
+				Color c = C_new((1.0*donnees[3*indice  ])/valmax,
+						(1.0*donnees[3*indice+1])/valmax,
+						(1.0*donnees[3*indice+2])/valmax);
+				_plot(img, x, y, c);
+			}
+		}
 	}
 	else
 	{
-		Ppm ppm = PPM_nouv("input.ppm", PPM_LECTURE);
-		system("rm input.ppm");
-
-		fprintf(stderr, "%d x %d\n", PPM_largeur(ppm), PPM_hauteur(ppm));
-
-		if (ppm != NULL)
+		unsigned short *donnees = (unsigned short*)calloc(3*nb_pixels, sizeof(unsigned short));
+		int x, y;
+		PPM_lectureDonneesShort(ppm, donnees);
+		for (y = 0; y < img->_height; y++)
 		{
-			img = I_new(PPM_largeur(ppm), PPM_hauteur(ppm));
-			int nb_bits = ppm->_nb_bits;
-			int valmax = ppm->_valmax;
-
-			int nb_pixels = img->_width*img->_height;
-
-			if (nb_bits <= 8)
+			for (x = 0; x < img->_width; x++)
 			{
-				unsigned char *donnees = (unsigned char*)calloc(3*nb_pixels, sizeof(unsigned char));
-				PPM_lectureDonneesChar(ppm, donnees);
-
-				int x, y;
-				for (y = 0; y < img->_height; y++)
-					for (x = 0; x < img->_width; x++)
-					{
-						int indice = (img->_height-y)*img->_width + x;
-						Color c = C_new((1.0*donnees[3*indice  ])/valmax,
-										(1.0*donnees[3*indice+1])/valmax,
-										(1.0*donnees[3*indice+2])/valmax);
-						_plot(img, x, y, c);
-					}
+				int indice = (img->_height - y) * img->_width + x;
+				Color c = C_new((1.0*donnees[3*indice  ])/valmax,
+						(1.0*donnees[3*indice+1])/valmax,
+						(1.0*donnees[3*indice+2])/valmax);
+				img->_buffer[x][y] = c;
 			}
-			else
-			{
-				unsigned short *donnees = (unsigned short*)calloc(3*nb_pixels, sizeof(unsigned short));
-				PPM_lectureDonneesShort(ppm, donnees);
-				int x, y;
-				for (y = 0; y < img->_height; y++)
-					for (x = 0; x < img->_width; x++)
-					{
-						int indice = (img->_height-y)*img->_width + x;
-						Color c = C_new((1.0*donnees[3*indice  ])/valmax,
-										(1.0*donnees[3*indice+1])/valmax,
-										(1.0*donnees[3*indice+2])/valmax);
-						img->_buffer[x][y] = c;
-					}
-			}
-			PPM_fermeture(ppm);
-			return(img);
 		}
-		else
-			return(NULL);
 	}
+	PPM_fermeture(ppm);
+	return img;
 }
 
 //------------------------------------------------------------------------
@@ -154,8 +160,10 @@ void I_fill(Image *img, Color c)
 {
 	int x, y;
 	for (x = 0; x < img->_width; x++)
+	{
 		for (y = 0; y < img->_height; y++)
 			img->_buffer[x][y] = c;
+	}
 }
 
 //------------------------------------------------------------------------
@@ -164,12 +172,15 @@ void I_checker(Image *img, Color c, int step)
 {
 	int x, y;
 	for (x = 0; x < img->_width; x++)
+	{
 		for (y = 0; y < img->_height; y++)
 		{
 			int n_x = x/step;
 			int n_y = y/step;
-			if ((n_x+n_y)%2 == 0)	_plot(img, x, y, c);
+			if ((n_x + n_y) % 2 == 0)
+				_plot(img, x, y, c);
 		}
+	}
 }
 
 //------------------------------------------------------------------------
@@ -272,6 +283,7 @@ void I_draw(Image *img)
 	glBegin(GL_POINTS);
 	int xwin, ywin, ximg, yimg;
 	for (xwin = 0; xwin < img->_width; xwin++)
+	{
 		for (ywin = 0; ywin < img->_height; ywin++)
 		{
 			_windowToImage(img, xwin, ywin, &ximg, &yimg);
@@ -285,6 +297,7 @@ void I_draw(Image *img)
 			glColor3f(c._red, c._green, c._blue);
 			glVertex2i(xwin, ywin);
 		}
+	}
 	glEnd();
 }
 
