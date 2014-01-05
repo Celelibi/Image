@@ -60,24 +60,6 @@ struct vertex* polygon_remove_vertex(struct polygon* poly, struct vertex* victim
 }
 
 /*
-* Récupère le dernier sommet d'une liste.
-*/
-static struct vertex* polygon_get_last_vertex(struct vertex* list)
-{
-	if(list != NULL)
-	{
-		struct vertex* cursor = list;
-		while(cursor->next != NULL) cursor = cursor->next;
-
-		return cursor;
-	}
-	else
-	{
-		return NULL;
-	}
-}
-
-/*
  * Ferme un polygone overt et inversement. Renvoi 1 si le polygone vient d'être fermé, 0 sinon.
  */
 int polygon_toggle_close(struct polygon* poly)
