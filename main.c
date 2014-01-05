@@ -13,6 +13,7 @@
 \*===============================================================*/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <GL/glut.h>
 #include <GL/gl.h>
 
@@ -158,7 +159,7 @@ int main(int argc, char **argv)
 	{
 		fprintf(stderr,"\n\nUsage \t: %s <width> <height>\nou",argv[0]);
 		fprintf(stderr,"\t: %s <ppmfilename> \n\n",argv[0]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if (argc == 2)
@@ -206,5 +207,5 @@ int main(int argc, char **argv)
 
 	glutMainLoop();
 
-	return 0;
+	return EXIT_SUCCESS;
 }
