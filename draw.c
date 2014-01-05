@@ -9,16 +9,16 @@ struct vertex* polygon_append_vertex(struct vertex* list, int x, int y)
 {
 	// Allocation
 	struct vertex* new = malloc(sizeof(struct vertex));
-	
+
 	new->x = x;
 	new->y = y;
-	
+
 	if(list != NULL)
 	{
 		// Ajout en fin de liste
 		struct vertex* cursor = list;
 		while(cursor->next != list) cursor = cursor->next;
-		
+
 		new->prev = cursor;
 		new->next = list;
 		cursor->next = new;
@@ -30,9 +30,9 @@ struct vertex* polygon_append_vertex(struct vertex* list, int x, int y)
 		list = new;
 		list->prev = list;
 		list->next = list;
-		
+
 	}
-	
+
 	return list;
 }
 
@@ -42,13 +42,13 @@ struct vertex* polygon_append_vertex(struct vertex* list, int x, int y)
 struct vertex* polygon_remove_vertex(struct vertex* list, struct vertex* victim)
 {
 	struct vertex* cursor = list;
-	
+
 	if(cursor == victim) // Je suis le 1er élément de la liste
 	{
 		/*
 		* Le successeur de la victime devient la nouvelle tête de liste.
 		*/
-		
+
 		struct vertex* newHead = cursor->next;
 		newHead->prev = victim->prev;
 		victim->prev->next = newHead;
@@ -68,11 +68,11 @@ struct vertex* polygon_remove_vertex(struct vertex* list, struct vertex* victim)
 				cursor->next = cursor->next->next; // tordu, n'est-ce pas ?
 				cursor->next->prev = cursor;
 				free(victim);
-				
+
 				cursor = NULL; // sortie de boucle
 			}
 		}while(cursor != list);
-		
+
 		// La tête de liste n'a pas changé !
 		return list;
 	}
@@ -87,7 +87,7 @@ static struct vertex* polygon_get_last_vertex(struct vertex* list)
 	{
 		struct vertex* cursor = list;
 		while(cursor->next != NULL) cursor = cursor->next;
-		
+
 		return cursor;
 	}
 	else

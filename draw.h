@@ -39,7 +39,7 @@ struct drawing {
 struct vertex* polygon_append_vertex(struct vertex* list, int x, int y);
 struct vertex* polygon_remove_vertex(struct vertex* list, struct vertex* victim);
 void polygon_rasterize(struct polygon *p, Image *img);
-void drawing_rasterize(struct drawing *d, Image *img); 
+void drawing_rasterize(struct drawing *d, Image *img);
 void segment_rasterize(Image *img, int xA, int yA, int xB, int yB);
 
 /*
