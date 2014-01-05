@@ -440,7 +440,7 @@ void I_bresenham(Image *img, int xA, int yA, int xB, int yB)
 							e = e + dx;
 							if (e <= 0)
 							{
-								x++;
+								x--;
 								e = e + dy;
 							}
 						}
