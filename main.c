@@ -34,13 +34,13 @@ int is_closed = 0;
 
 void display_CB()
 {
-    glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT);
 
 	/*I_bresenham(img, 0, 0, 100, 100);
-	I_bresenham(img, 100, 100, 300, 200);
-	I_bresenham(img, 300, 200, 400, 150);
-	I_bresenham(img, 400, 150, 350, 90);
-	I_bresenham(img, 350, 90, 0, 0);*/
+	  I_bresenham(img, 100, 100, 300, 200);
+	  I_bresenham(img, 300, 200, 400, 150);
+	  I_bresenham(img, 400, 150, 350, 90);
+	  I_bresenham(img, 350, 90, 0, 0);*/
 
 	if(s_list != NULL) // Si on a au moins un sommet de placé...
 	{
@@ -48,10 +48,10 @@ void display_CB()
 		while(cursor->next != NULL)
 		{
 			I_bresenham(img, cursor->x, cursor->y, cursor->next->x, cursor->next->y);
-			
+
 			cursor = cursor->next;
 		}
-		
+
 		if(is_closed)
 		{
 			// Relie le dernier élément au premier
@@ -61,7 +61,7 @@ void display_CB()
 
 	I_draw(img);
 
-    glutSwapBuffers();
+	glutSwapBuffers();
 }
 
 //------------------------------------------------------------------
@@ -77,24 +77,24 @@ void mouse_CB(int button, int state, int x, int y)
 	{
 		y = img->_height - y; // inversion
 		printf("--> clic détecté à %d, %d\n", x, y);
-		
+
 		// Bresenham entre le point cliqué et celui cliqué précédemment
-		
+
 		if(is_closed)
 		{
 			printf("--> le polygone est fermé donc je ne fais rien\n");
 			return;
 			/*
-			* Rien pour le moment.
-			* TODO : permettre de stocker plus d'un polygone à la fois,
-			* ou au moins d'effacer le polygone actuel.
-			*/
+			 * Rien pour le moment.
+			 * TODO : permettre de stocker plus d'un polygone à la fois,
+			 * ou au moins d'effacer le polygone actuel.
+			 */
 		}
-		
+
 		printf("--> ajout du sommet %d, %d\n", x, y);
 		s_list = sommet_add(s_list, x, y);
 	}
-	
+
 	// Bouton droit...
 	else if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
 	{
@@ -115,12 +115,20 @@ void keyboard_CB(unsigned char key, int x, int y)
 	// fprintf(stderr,"key=%d\n",key);
 	switch(key)
 	{
-	case 27 : exit(1); break;
-	case 'z' : I_zoom(img,2.0); break;
-	case 'Z' : I_zoom(img,0.5); break;
-	case 'i' : I_zoomInit(img); break;
-	case 'c' : is_closed = !is_closed; if(is_closed) printf("Polygone fermé\n"); else printf("Polygone réouvert\n"); break;
-	default : fprintf(stderr,"keyboard_CB : %d : unknown key.\n",key);
+	case 27: exit(EXIT_FAILURE); break;
+	case 'z': I_zoom(img, 2.0); break;
+	case 'Z': I_zoom(img, 0.5); break;
+	case 'i': I_zoomInit(img); break;
+	case 'c':
+		is_closed = !is_closed;
+		if(is_closed)
+			printf("Polygone fermé\n");
+		else
+			printf("Polygone réouvert\n");
+		break;
+
+	default:
+		fprintf(stderr,"keyboard_CB : %d : unknown key.\n",key);
 	}
 	glutPostRedisplay();
 }
