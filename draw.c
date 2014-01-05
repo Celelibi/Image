@@ -358,13 +358,15 @@ void polygon_rasterize(struct polygon *p, Image *img)
 
 void drawing_rasterize(struct drawing *d, Image *img)
 {
+	struct polygon* p;
 	Color black = C_new(0,0,0);
 	I_fill(img, black);
 
-	while(d->p_list != NULL)
+	p = d->p_list;
+	while(p != NULL)
 	{
-		polygon_rasterize(d->p_list, img);
-		d->p_list = d->p_list->next;
+		polygon_rasterize(p, img);
+		p = p->next;
 	}
 }
 
