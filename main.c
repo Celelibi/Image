@@ -105,6 +105,13 @@ void keyboard_CB(unsigned char key, int x, int y)
 			printf("Polygone réouvert\n");
 		break;
 
+	case 'f':
+		if (!polygon_is_closed(drawing.p_active))
+			printf("Le polygone n'est pas fermé\n");
+		else
+			drawing.p_active->is_filled ^= 1;
+		break;
+
 	default:
 		fprintf(stderr,"keyboard_CB : %d : unknown key.\n",key);
 	}

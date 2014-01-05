@@ -100,6 +100,7 @@ int polygon_toggle_close(struct polygon* poly)
 	// Polygone fermé -> on l'ouvre
 	poly->v_list->prev->next = NULL;
 	poly->v_list->prev = NULL;
+	poly->is_filled = 0;
 	return 0;
 }
 
