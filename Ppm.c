@@ -308,24 +308,24 @@ static int _nthBitValue(int nth, unsigned char c)
 
 //------------------------------------------------------
 
-static void _setNthBitValue(int nth, unsigned char *c, int bool_value)
+/*static void _setNthBitValue(int nth, unsigned char *c, int bool_value)
 {
 	int power_of_2 = 1 << nth;
 	if(bool_value)
 		*c = *c | power_of_2;
 	else
 		*c = *c & (~power_of_2);
-}
+}*/
 
 //------------------------------------------------------
 
-static void _checkBits(unsigned char c)
+/*static void _checkBits(unsigned char c)
 {
 	int i;
 	for(i=7;i>=0;i--)
 		printf("%d",_nthBitValue(i,c));
 	printf("\n");
-}
+}*/
 
 //------------------------------------------------------
 // data PPMType = P1 -- ^ ASCII bitmap
