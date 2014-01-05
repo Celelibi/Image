@@ -89,7 +89,7 @@ void mouse_CB(int button, int state, int x, int y)
 		if (drawing.p_active == NULL)
 			drawing_new_polygon(&drawing);
 
-		if(drawing.p_active->is_closed)
+		if(polygon_is_closed(drawing.p_active))
 		{
 			printf("--> le polygone est fermé donc je ne fais rien\n");
 			return;
@@ -129,8 +129,7 @@ void keyboard_CB(unsigned char key, int x, int y)
 	case 'Z': I_zoom(img, 0.5); break;
 	case 'i': I_zoomInit(img); break;
 	case 'c':
-		drawing.p_active->is_closed = !drawing.p_active->is_closed;
-		if(drawing.p_active->is_closed)
+		if (polygon_toggle_close(drawing.p_active))
 			printf("Polygone fermé\n");
 		else
 			printf("Polygone réouvert\n");

@@ -21,7 +21,6 @@ struct vertex {
 struct polygon {
 	struct vertex* v_list;
 	int is_filled;
-	int is_closed;
 	struct polygon* next;
 };
 
@@ -40,6 +39,10 @@ struct drawing {
 
 struct vertex* polygon_append_vertex(struct vertex* list, int x, int y);
 struct vertex* polygon_remove_vertex(struct vertex* list, struct vertex* victim);
+
+/* Ferme un polygone overt et inversement. Renvoi 1 si le polygone vient d'être fermé, 0 sinon. */
+int polygon_toggle_close(struct polygon* poly);
+int polygon_is_closed(struct polygon* poly);
 
 /* Ajoute un polygone vide à la fin de la liste et le renvoi et le défini comme polygone actif */
 void drawing_new_polygon(struct drawing *d);

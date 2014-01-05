@@ -9,7 +9,9 @@
 struct vertex* polygon_append_vertex(struct vertex* list, int x, int y)
 {
 	// Allocation
-	struct vertex* new = malloc(sizeof(struct vertex));
+	struct vertex* new = malloc(sizeof(*new));
+
+	memset(new, 0, sizeof(*new));
 
 	new->x = x;
 	new->y = y;
@@ -18,20 +20,21 @@ struct vertex* polygon_append_vertex(struct vertex* list, int x, int y)
 	{
 		// Ajout en fin de liste
 		struct vertex* cursor = list;
-		while(cursor->next != list) cursor = cursor->next;
+		while(cursor->next != NULL && cursor->next != list)
+			cursor = cursor->next;
 
 		new->prev = cursor;
-		new->next = list;
+		new->next = cursor->next;
 		cursor->next = new;
-		list->prev = new;
+
+		if (new->next != NULL)
+			new->next->prev = new;
 	}
 	else
 	{
 		// Je deviens la nouvelle tête de liste
+		// next et prev sont déjà NULL
 		list = new;
-		list->prev = list;
-		list->next = list;
-
 	}
 
 	return list;
@@ -95,6 +98,37 @@ static struct vertex* polygon_get_last_vertex(struct vertex* list)
 	{
 		return NULL;
 	}
+}
+
+/*
+ * Ferme un polygone overt et inversement. Renvoi 1 si le polygone vient d'être fermé, 0 sinon.
+ */
+int polygon_toggle_close(struct polygon* poly)
+{
+	if (poly->v_list == NULL)
+		return 0;
+
+	// Polygone ouvert -> on le ferme
+	if (poly->v_list->prev == NULL)
+	{
+		struct vertex* cursor = poly->v_list;
+		while (cursor->next != NULL)
+			cursor = cursor->next;
+
+		cursor->next = poly->v_list;
+		poly->v_list->prev = cursor;
+		return 1;
+	}
+
+	// Polygone fermé -> on l'ouvre
+	poly->v_list->prev->next = NULL;
+	poly->v_list->prev = NULL;
+	return 0;
+}
+
+int polygon_is_closed(struct polygon* poly)
+{
+	return poly->v_list != NULL && poly->v_list->prev != NULL;
 }
 
 /*
@@ -338,21 +372,17 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 
 void polygon_rasterize(struct polygon *p, Image *img)
 {
-	if(p->v_list != NULL) // Si on a au moins un sommet de placé...
+	// Si on a au moins un sommet de placé...
+	if(p->v_list != NULL)
 	{
 		struct vertex* cursor = p->v_list;
-		while(cursor->next != p->v_list)
+		while(cursor->next != NULL && cursor->next != p->v_list)
 		{
 			segment_rasterize(img, cursor->x, cursor->y, cursor->next->x, cursor->next->y);
-
 			cursor = cursor->next;
 		}
-
-		if(p->is_closed)
-		{
-			// Relie le dernier élément au premier
-			segment_rasterize(img, cursor->x, cursor->y, p->v_list->x, p->v_list->y);
-		}
+		if (cursor->next != NULL)
+			segment_rasterize(img, cursor->x, cursor->y, cursor->next->x, cursor->next->y);
 	}
 }
 
