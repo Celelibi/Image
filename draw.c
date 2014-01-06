@@ -472,13 +472,16 @@ struct active_edge* active_edge_sort(struct active_edge* ael, size_t size)
 	return active_edge_merge_lists(ael1, ael2);
 }
 
-void active_edge_init(struct vertex* vymin, struct vertex * vymax, struct active_edge* ae)
+void active_edge_init(struct vertex* vymin, struct vertex* vymax, struct active_edge* next, struct active_edge* ae)
 {
+	memset(ae, 0, sizeof(*ae));
+
 	ae->vymin = vymin;
 	ae->vymax = vymax;
 	ae->x_inter = ae->vymin->x;
 	ae->dx = ae->vymax->x - ae->vymin->x;
 	ae->dy = ae->vymax->y - ae->vymin->y;
+	ae->next = next;
 }
 
 static void polygon_fill(struct polygon* p, Image* img)
@@ -519,16 +522,10 @@ static void polygon_fill(struct polygon* p, Image* img)
 			exit(EXIT_FAILURE);
 		}
 
-		memset(ae1, 0, sizeof(*ae1));
-		memset(ae2, 0, sizeof(*ae2));
+		active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->next, ae2, ae1);
+		active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->prev, ael, ae2);
 
-		active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->next, ae1);
-		active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->prev, ae2);
-
-		ae2->next = ael;
-		ae1->next = ae2;
 		ael = ae1;
-
 		ael_size += 2;
 	}
 
@@ -552,9 +549,9 @@ static void polygon_fill(struct polygon* p, Image* img)
 			if (ae->vymax->y == y)
 			{
 				if (ae->vymax->next->y > y)
-					active_edge_init(ae->vymax, ae->vymax->next, ae);
+					active_edge_init(ae->vymax, ae->vymax->next, ae->next, ae);
 				else if (ae->vymax->prev->y > y)
-					active_edge_init(ae->vymax, ae->vymax->prev, ae);
+					active_edge_init(ae->vymax, ae->vymax->prev, ae->next, ae);
 				else
 				{
 					/* On a atteint un sommet en V dans lequel on coloriait,
@@ -575,9 +572,9 @@ static void polygon_fill(struct polygon* p, Image* img)
 			if (aen->vymax->y == y)
 			{
 				if (aen->vymax->next->y > y)
-					active_edge_init(aen->vymax, aen->vymax->next, aen);
+					active_edge_init(aen->vymax, aen->vymax->next, aen->next, aen);
 				else if (aen->vymax->prev->y > y)
-					active_edge_init(aen->vymax, aen->vymax->prev, aen);
+					active_edge_init(aen->vymax, aen->vymax->prev, aen->next, aen);
 				else {
 					/* On a atteint un sommet en V dans lequel on ne coloriait pas,
 					 * on élimine le couple d'arête aen+aen->next */
@@ -622,16 +619,10 @@ static void polygon_fill(struct polygon* p, Image* img)
 					exit(EXIT_FAILURE);
 				}
 
-				memset(ae1, 0, sizeof(*ae1));
-				memset(ae2, 0, sizeof(*ae2));
+				active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->next, ae2, ae1);
+				active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->prev, ael, ae2);
 
-				active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->next, ae1);
-				active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->prev, ae2);
-
-				ae2->next = ael;
-				ae1->next = ae2;
 				ael = ae1;
-
 				ael_size += 2;
 			}
 			yvertex_bound_idx++;
