@@ -140,7 +140,7 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 			{
 				if (dy > 0)
 				{
-					// vecteur oblique dans le 1er quadran
+					// vecteur oblique dans le 1er cadran
 					if (dx >= dy)
 					{
 						// vecteur diagonal ou oblique proche de l'horizontale, dans le 1er octant
@@ -228,7 +228,7 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 			{
 				if (dy > 0)
 				{
-					// vecteur oblique dans le 2nd quadran
+					// vecteur oblique dans le 2nd cadran
 					if (-dx >= dy)
 					{
 						// vecteur diagonal ou oblique proche de l'horizontale, dans le 4e octant
