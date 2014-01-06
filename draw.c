@@ -29,6 +29,7 @@ struct vertex* polygon_append_vertex(struct polygon* poly, int x, int y)
 
 		if (new->next != NULL)
 			new->next->prev = new;
+		
 	}
 	else
 	{
@@ -36,6 +37,8 @@ struct vertex* polygon_append_vertex(struct polygon* poly, int x, int y)
 		// next et prev sont déjà NULL
 		poly->v_list = new;
 	}
+	
+	poly->v_last = new;
 
 	return new;
 }
@@ -50,17 +53,21 @@ struct vertex* polygon_remove_vertex(struct polygon* poly, struct vertex* victim
 	 */
 	if (poly->v_list == victim)
 		poly->v_list = poly->v_list->next;
+	if (poly->v_last == victim) 
+		poly->v_last = victim->prev;
 
 	if (victim->next != NULL)
 		victim->next->prev = victim->prev;
 	if (victim->prev != NULL)
 		victim->prev->next = victim->next;
-
+	
+	free(victim);
+	
 	return poly->v_list;
 }
 
 /*
- * Ferme un polygone overt et inversement. Renvoi 1 si le polygone vient d'être fermé, 0 sinon.
+ * Ferme un polygone overt et inversement. Renvoie 1 si le polygone vient d'être fermé, 0 sinon.
  */
 int polygon_toggle_close(struct polygon* poly)
 {
@@ -92,7 +99,7 @@ int polygon_is_closed(struct polygon* poly)
 }
 
 /*
- * Ajoute un polygone vide à la fin de la liste et le renvoi
+ * Ajoute un polygone vide à la fin de la liste et le renvoie
  */
 void drawing_new_polygon(struct drawing *d)
 {
@@ -481,7 +488,7 @@ struct active_edge* active_edge_sort(struct active_edge* ael, size_t size)
 		return ael;
 	}
 
-	/* TODO: Alémiorer le cet algo en découpant en "runs" */
+	/* TODO: Améliorer cet algo en découpant en "runs" */
 	/* Coupe la liste en deux */
 	ael1 = ael;
 	size1 = size / 2;

@@ -21,8 +21,12 @@
 #include "Image.h"
 #include "draw.h"
 
+enum {APPEND, VERTEX, EDGE};
+
 Image *img;
 struct drawing drawing;
+struct vertex* selected;
+int mode = APPEND;
 
 //------------------------------------------------------------------
 //	C'est le display callback. A chaque fois qu'il faut
@@ -98,10 +102,41 @@ void keyboard_CB(unsigned char key, int x, int y)
 	// fprintf(stderr,"key=%d\n",key);
 	switch(key)
 	{
-	case 27: glutLeaveMainLoop(); break;
-	case 'z': I_zoom(img, 2.0); break;
-	case 'Z': I_zoom(img, 0.5); break;
-	case 'i': I_zoomInit(img); break;
+	case 27 : // Echap
+		glutLeaveMainLoop(); 
+		break;
+	case 127: // Suppr
+		if(drawing.p_active->v_list != NULL)
+		{
+			if(mode == APPEND)
+				polygon_remove_vertex(drawing.p_active, drawing.p_active->v_last);
+			if(mode == VERTEX)
+			{
+				polygon_remove_vertex(drawing.p_active, selected);
+				selected = drawing.p_active->v_list;
+			}
+		}
+		break;
+	case 'z': 
+		I_zoom(img, 2.0); 
+		break;
+	case 'Z': 
+		I_zoom(img, 0.5); 
+		break;
+	case 'i': 
+		I_zoomInit(img); 
+		break;
+	case 'a': 
+		mode = APPEND; 
+		break;
+	case 'v': 
+		mode = VERTEX; 
+		if(drawing.p_active != NULL)
+			selected = drawing.p_active->v_list;
+		break;
+	case 'e':
+		mode = EDGE;
+		break;
 	case 'c':
 		if (polygon_toggle_close(drawing.p_active))
 			printf("Polygone fermé\n");
@@ -133,17 +168,46 @@ void special_CB(int key, int x, int y)
 	(void)x;
 	(void)y;
 
-	// int mod = glutGetModifiers();
-
 	int d = 10;
 
 	switch(key)
 	{
-	case GLUT_KEY_UP    : I_move(img,0,d); break;
-	case GLUT_KEY_DOWN  : I_move(img,0,-d); break;
-	case GLUT_KEY_LEFT  : I_move(img,d,0); break;
-	case GLUT_KEY_RIGHT : I_move(img,-d,0); break;
-	default : fprintf(stderr,"special_CB : %d : unknown key.\n",key);
+	case GLUT_KEY_UP    : 
+				if(mode == APPEND) 
+					I_move(img,0,d); 
+				if(mode == VERTEX && selected != NULL) 
+					(selected->y)++; 
+				break;
+	case GLUT_KEY_DOWN  :
+				if(mode == APPEND) 
+					I_move(img,0,-d); 
+				if(mode == VERTEX && selected != NULL)
+					(selected->y)--; 
+				break;
+	case GLUT_KEY_LEFT  : 
+				if(mode == APPEND) 
+					I_move(img,d,0);
+				if(mode == VERTEX && selected != NULL) 
+					(selected->x)--; 
+				break;
+	case GLUT_KEY_RIGHT : 
+				if(mode == APPEND) 
+					I_move(img,-d,0);
+				if(mode == VERTEX && selected != NULL)
+					(selected->x)++; 
+				break;
+	case GLUT_KEY_PAGE_UP :
+				if(mode == VERTEX && selected->next != NULL)
+					selected = selected->next;
+				// TODO if(mode == EDGE)
+				break;
+	case GLUT_KEY_PAGE_DOWN :
+				if(mode == VERTEX && selected->prev != NULL)
+					selected = selected->prev;
+				// TODO if(mode == EDGE)
+				break;
+	default : 
+				fprintf(stderr,"special_CB : %d : unknown key.\n",key);
 	}
 	glutPostRedisplay();
 }
