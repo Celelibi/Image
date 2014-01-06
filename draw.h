@@ -21,6 +21,7 @@ struct vertex {
 struct polygon {
 	struct vertex* v_list;
 	struct vertex* v_last;
+	size_t vertexcnt;
 	int is_filled;
 	struct polygon* next;
 };

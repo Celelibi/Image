@@ -35,6 +35,7 @@ struct vertex* polygon_append_vertex(struct polygon* poly, int x, int y)
 	}
 
 	poly->v_last = new;
+	poly->vertexcnt++;
 
 	return new;
 }
@@ -58,6 +59,7 @@ struct vertex* polygon_remove_vertex(struct polygon* poly, struct vertex* victim
 		victim->prev->next = victim->next;
 
 	free(victim);
+	poly->vertexcnt--;
 
 	return poly->v_list;
 }
@@ -366,15 +368,7 @@ static int polygon_ysorted_compare(const void *a, const void *b)
 static void polygon_ysorted_vertex(struct polygon* p, struct vertex*** t, size_t *size)
 {
 	struct vertex* cursor;
-	size_t vertexcnt = 1;
 	size_t i;
-
-	cursor = p->v_list;
-	while (cursor != NULL && cursor->next != p->v_list)
-	{
-		vertexcnt++;
-		cursor = cursor->next;
-	}
 
 	/* Be a bit more fool-proof */
 	if (*t == NULL || *size == 0)
@@ -384,9 +378,9 @@ static void polygon_ysorted_vertex(struct polygon* p, struct vertex*** t, size_t
 	}
 
 	/* realloc the memory if needed */
-	if (*size < vertexcnt)
+	if (*size < p->vertexcnt)
 	{
-		*t = realloc(*t, vertexcnt * sizeof(**t));
+		*t = realloc(*t, p->vertexcnt * sizeof(**t));
 		if (*t == NULL)
 		{
 			perror("realloc");
@@ -395,11 +389,11 @@ static void polygon_ysorted_vertex(struct polygon* p, struct vertex*** t, size_t
 	}
 
 	/* Set the array size */
-	*size = vertexcnt;
+	*size = p->vertexcnt;
 
 	/* Fill the array */
 	cursor = p->v_list;
-	for (i = 0; i < vertexcnt; i++) {
+	for (i = 0; i < p->vertexcnt; i++) {
 		(*t)[i] = cursor;
 		cursor = cursor->next;
 	}
