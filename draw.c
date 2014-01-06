@@ -360,36 +360,23 @@ static int polygon_ysorted_compare(const void *a, const void *b)
  * This function is a helper for polygon_fill
  * It build an array of pointers to the vertex of the polygon.
  * This array is ordered by y-coordinate.
- * This function will fill the memory passed as argument *t, if not NULL,
+ * This function will fill the memory passed as argument t.
  * the array must be big enough for p->vertexcnt pointers to struct vertex.
- * If *t is NULL, this function will malloc the array and fill the pointer.
- * It's up to the caller to free that memory.
  */
-static void polygon_ysorted_vertex(struct polygon* p, struct vertex*** t)
+static void polygon_ysorted_vertex(struct polygon* p, struct vertex** t)
 {
 	struct vertex* cursor;
 	size_t i;
 
-	/* Allocate the memory if needed */
-	if (*t == NULL)
-	{
-		*t = malloc(p->vertexcnt * sizeof(**t));
-		if (*t == NULL)
-		{
-			perror("malloc");
-			exit(EXIT_FAILURE);
-		}
-	}
-
 	/* Fill the array */
 	cursor = p->v_list;
 	for (i = 0; i < p->vertexcnt; i++) {
-		(*t)[i] = cursor;
+		t[i] = cursor;
 		cursor = cursor->next;
 	}
 
 	/* Sort the array */
-	qsort(*t, p->vertexcnt, sizeof(**t), polygon_ysorted_compare);
+	qsort(t, p->vertexcnt, sizeof(*t), polygon_ysorted_compare);
 }
 
 struct active_edge {
@@ -502,7 +489,14 @@ static void polygon_fill(struct polygon* p, Image* img)
 	struct active_edge* ael = NULL;
 	size_t ael_size = 0;
 
-	polygon_ysorted_vertex(p, &yvertex);
+	yvertex = malloc(p->vertexcnt * sizeof(*yvertex));
+	if (yvertex == NULL)
+	{
+		perror("malloc");
+		exit(EXIT_FAILURE);
+	}
+
+	polygon_ysorted_vertex(p, yvertex);
 
 	/* TODO: mettre des segments à la place des vertex? */
 
