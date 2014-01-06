@@ -19,13 +19,9 @@ struct vertex* polygon_append_vertex(struct polygon* poly, int x, int y)
 	if(poly->v_list != NULL)
 	{
 		// Ajout en fin de liste
-		struct vertex* cursor = poly->v_list;
-		while(cursor->next != NULL && cursor->next != poly->v_list)
-			cursor = cursor->next;
-
-		new->prev = cursor;
-		new->next = cursor->next;
-		cursor->next = new;
+		new->prev = poly->v_last;
+		new->next = poly->v_last->next;
+		poly->v_last->next = new;
 
 		if (new->next != NULL)
 			new->next->prev = new;
@@ -77,17 +73,13 @@ int polygon_toggle_close(struct polygon* poly)
 	// Polygone ouvert -> on le ferme
 	if (poly->v_list->prev == NULL)
 	{
-		struct vertex* cursor = poly->v_list;
-		while (cursor->next != NULL)
-			cursor = cursor->next;
-
-		cursor->next = poly->v_list;
-		poly->v_list->prev = cursor;
+		poly->v_last->next = poly->v_list;
+		poly->v_list->prev = poly->v_last;
 		return 1;
 	}
 
 	// Polygone fermé -> on l'ouvre
-	poly->v_list->prev->next = NULL;
+	poly->v_last->next = NULL;
 	poly->v_list->prev = NULL;
 	poly->is_filled = 0;
 	return 0;
