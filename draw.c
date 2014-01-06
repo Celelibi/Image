@@ -359,37 +359,27 @@ static int polygon_ysorted_compare(const void *a, const void *b)
 /*
  * This function is a helper for polygon_fill
  * It build an array of pointers to the vertex of the polygon.
- * This list is ordered by y-coordinate.
- * This function will fill the memory passed as argument t (with size *size) if non-zero and big enough,
- * if needed, this function will realloc the given memory.
+ * This array is ordered by y-coordinate.
+ * This function will fill the memory passed as argument *t, if not NULL,
+ * the array must be big enough for p->vertexcnt pointers to struct vertex.
+ * If *t is NULL, this function will malloc the array and fill the pointer.
  * It's up to the caller to free that memory.
- * The size of the array is return as *size.
  */
-static void polygon_ysorted_vertex(struct polygon* p, struct vertex*** t, size_t *size)
+static void polygon_ysorted_vertex(struct polygon* p, struct vertex*** t)
 {
 	struct vertex* cursor;
 	size_t i;
 
-	/* Be a bit more fool-proof */
-	if (*t == NULL || *size == 0)
+	/* Allocate the memory if needed */
+	if (*t == NULL)
 	{
-		*t = NULL;
-		*size = 0;
-	}
-
-	/* realloc the memory if needed */
-	if (*size < p->vertexcnt)
-	{
-		*t = realloc(*t, p->vertexcnt * sizeof(**t));
+		*t = malloc(p->vertexcnt * sizeof(**t));
 		if (*t == NULL)
 		{
-			perror("realloc");
+			perror("malloc");
 			exit(EXIT_FAILURE);
 		}
 	}
-
-	/* Set the array size */
-	*size = p->vertexcnt;
 
 	/* Fill the array */
 	cursor = p->v_list;
@@ -399,7 +389,7 @@ static void polygon_ysorted_vertex(struct polygon* p, struct vertex*** t, size_t
 	}
 
 	/* Sort the array */
-	qsort(*t, *size, sizeof(**t), polygon_ysorted_compare);
+	qsort(*t, p->vertexcnt, sizeof(**t), polygon_ysorted_compare);
 }
 
 struct active_edge {
@@ -507,22 +497,21 @@ void active_edge_init(struct vertex* vymin, struct vertex * vymax, struct active
 static void polygon_fill(struct polygon* p, Image* img)
 {
 	struct vertex** yvertex = NULL;
-	size_t yvertex_size = 0;
 	size_t yvertex_bound_idx;
 	int ymin, ymax, y;
 	struct active_edge* ael = NULL;
 	size_t ael_size = 0;
 
-	polygon_ysorted_vertex(p, &yvertex, &yvertex_size);
+	polygon_ysorted_vertex(p, &yvertex);
 
 	/* TODO: mettre des segments à la place des vertex? */
 
 	ymin = yvertex[0]->y;
-	ymax = yvertex[yvertex_size - 1]->y;
+	ymax = yvertex[p->vertexcnt - 1]->y;
 
 	/* Construit la liste initiale des active_edge */
 	/* TODO: merger ça avec l'ajout des sommets en ^ */
-	for (yvertex_bound_idx = 0; yvertex_bound_idx < yvertex_size && yvertex[yvertex_bound_idx]->y == ymin; yvertex_bound_idx++)
+	for (yvertex_bound_idx = 0; yvertex_bound_idx < p->vertexcnt && yvertex[yvertex_bound_idx]->y == ymin; yvertex_bound_idx++)
 	{
 		/* Les sommets du haut sont forcément des angles,
 		 * donc vont par deux */
@@ -624,7 +613,7 @@ static void polygon_fill(struct polygon* p, Image* img)
 		}
 
 		/* Ajout des sommets en ^ */
-		while (yvertex_bound_idx < yvertex_size && yvertex[yvertex_bound_idx]->y == y)
+		while (yvertex_bound_idx < p->vertexcnt && yvertex[yvertex_bound_idx]->y == y)
 		{
 			struct vertex *v = yvertex[yvertex_bound_idx];
 			if (v->next->y > y && v->prev->y > y)
