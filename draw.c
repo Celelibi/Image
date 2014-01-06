@@ -481,6 +481,9 @@ void active_edge_init(struct vertex* vymin, struct vertex* vymax, struct active_
 	ae->x_inter = ae->vymin->x;
 	ae->dx = ae->vymax->x - ae->vymin->x;
 	ae->dy = ae->vymax->y - ae->vymin->y;
+	ae->x_err = -ae->dy;
+	ae->dx *= 2;
+	ae->dy *= 2;
 	ae->next = next;
 }
 
@@ -589,7 +592,7 @@ static void polygon_fill(struct polygon* p, Image* img)
 			}
 
 			for (x = ae->x_inter + 1; x < aen->x_inter; x++)
-				I_plot(img, x, y);
+				I_plotColor(img, x, y, C_new(0, 1, 1));
 
 			ae->x_err += ae->dx;
 			ae->x_inter += ae->x_err / ae->dy;
