@@ -29,7 +29,7 @@ struct vertex* polygon_append_vertex(struct polygon* poly, int x, int y)
 
 		if (new->next != NULL)
 			new->next->prev = new;
-		
+
 	}
 	else
 	{
@@ -37,7 +37,7 @@ struct vertex* polygon_append_vertex(struct polygon* poly, int x, int y)
 		// next et prev sont déjà NULL
 		poly->v_list = new;
 	}
-	
+
 	poly->v_last = new;
 
 	return new;
@@ -53,16 +53,16 @@ struct vertex* polygon_remove_vertex(struct polygon* poly, struct vertex* victim
 	 */
 	if (poly->v_list == victim)
 		poly->v_list = poly->v_list->next;
-	if (poly->v_last == victim) 
+	if (poly->v_last == victim)
 		poly->v_last = victim->prev;
 
 	if (victim->next != NULL)
 		victim->next->prev = victim->prev;
 	if (victim->prev != NULL)
 		victim->prev->next = victim->next;
-	
+
 	free(victim);
-	
+
 	return poly->v_list;
 }
 

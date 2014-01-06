@@ -103,7 +103,7 @@ void keyboard_CB(unsigned char key, int x, int y)
 	switch(key)
 	{
 	case 27 : // Echap
-		glutLeaveMainLoop(); 
+		glutLeaveMainLoop();
 		break;
 	case 127: // Suppr
 		if(drawing.p_active->v_list != NULL)
@@ -117,20 +117,20 @@ void keyboard_CB(unsigned char key, int x, int y)
 			}
 		}
 		break;
-	case 'z': 
-		I_zoom(img, 2.0); 
+	case 'z':
+		I_zoom(img, 2.0);
 		break;
-	case 'Z': 
-		I_zoom(img, 0.5); 
+	case 'Z':
+		I_zoom(img, 0.5);
 		break;
-	case 'i': 
-		I_zoomInit(img); 
+	case 'i':
+		I_zoomInit(img);
 		break;
-	case 'a': 
-		mode = APPEND; 
+	case 'a':
+		mode = APPEND;
 		break;
-	case 'v': 
-		mode = VERTEX; 
+	case 'v':
+		mode = VERTEX;
 		if(drawing.p_active != NULL)
 			selected = drawing.p_active->v_list;
 		break;
@@ -172,29 +172,29 @@ void special_CB(int key, int x, int y)
 
 	switch(key)
 	{
-	case GLUT_KEY_UP    : 
-				if(mode == APPEND) 
-					I_move(img,0,d); 
-				if(mode == VERTEX && selected != NULL) 
-					(selected->y)++; 
+	case GLUT_KEY_UP    :
+				if(mode == APPEND)
+					I_move(img,0,d);
+				if(mode == VERTEX && selected != NULL)
+					(selected->y)++;
 				break;
 	case GLUT_KEY_DOWN  :
-				if(mode == APPEND) 
-					I_move(img,0,-d); 
+				if(mode == APPEND)
+					I_move(img,0,-d);
 				if(mode == VERTEX && selected != NULL)
-					(selected->y)--; 
+					(selected->y)--;
 				break;
-	case GLUT_KEY_LEFT  : 
-				if(mode == APPEND) 
+	case GLUT_KEY_LEFT  :
+				if(mode == APPEND)
 					I_move(img,d,0);
-				if(mode == VERTEX && selected != NULL) 
-					(selected->x)--; 
+				if(mode == VERTEX && selected != NULL)
+					(selected->x)--;
 				break;
-	case GLUT_KEY_RIGHT : 
-				if(mode == APPEND) 
+	case GLUT_KEY_RIGHT :
+				if(mode == APPEND)
 					I_move(img,-d,0);
 				if(mode == VERTEX && selected != NULL)
-					(selected->x)++; 
+					(selected->x)++;
 				break;
 	case GLUT_KEY_PAGE_UP :
 				if(mode == VERTEX && selected->next != NULL)
@@ -206,7 +206,7 @@ void special_CB(int key, int x, int y)
 					selected = selected->prev;
 				// TODO if(mode == EDGE)
 				break;
-	default : 
+	default :
 				fprintf(stderr,"special_CB : %d : unknown key.\n",key);
 	}
 	glutPostRedisplay();
