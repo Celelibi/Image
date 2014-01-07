@@ -660,3 +660,31 @@ void drawing_rasterize(struct drawing *d, Image *img)
 	}
 }
 
+struct vertex* closestVertex(struct polygon *p, int x, int y){
+	if(p != NULL && p->v_list != NULL)
+	{
+		//Initialisation des paramètres de recherche
+		struct vertex* ret = p->v_list;
+		int min = (x - ret->x) * (x - ret->x) + (y - ret->y) * (y - ret->y);
+		int tmp;
+		struct vertex* cursor = ret->next;
+
+		do
+		{
+			tmp = (x - cursor->x) * (x - cursor->x) + (y - cursor->y) * (y - cursor->y);
+			if(tmp < min){
+				min = tmp;
+				ret = cursor;
+			}
+			cursor = cursor->next;
+		}while(cursor != p->v_last); // Tant qu'on n'a pas étudié chaque sommet de p
+	
+		return ret;
+	}
+	else
+	{
+		perror("404 not found");
+		exit(EXIT_FAILURE);
+	}
+}
+

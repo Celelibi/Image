@@ -33,6 +33,7 @@ struct polygon {
 struct drawing {
 	struct polygon* p_list;
 	struct polygon* p_active;
+	struct vertex* v_selected;
 };
 
 /*
@@ -52,6 +53,9 @@ void drawing_new_polygon(struct drawing *d);
 void segment_rasterize(Image *img, int xA, int yA, int xB, int yB);
 void polygon_rasterize(struct polygon *p, Image *img);
 void drawing_rasterize(struct drawing *d, Image *img);
+
+struct vertex* closestVertex(struct polygon *p, int x, int y);
+struct vertex* closestEdge(struct polygon *p, int x, int y);
 
 /*
 * À ajouter plus tard :

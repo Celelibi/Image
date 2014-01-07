@@ -25,7 +25,6 @@ enum {APPEND, VERTEX, EDGE};
 
 Image *img;
 struct drawing drawing;
-struct vertex* selected;
 int mode = APPEND;
 
 //------------------------------------------------------------------
@@ -59,24 +58,29 @@ void mouse_CB(int button, int state, int x, int y)
 		y = img->_height - y; // inversion
 		printf("--> clic détecté à %d, %d\n", x, y);
 
-		// Bresenham entre le point cliqué et celui cliqué précédemment
-
-		if (drawing.p_active == NULL)
-			drawing_new_polygon(&drawing);
-
-		if(polygon_is_closed(drawing.p_active))
+		if(mode == APPEND)
 		{
-			printf("--> le polygone est fermé donc je ne fais rien\n");
-			return;
-			/*
-			 * Rien pour le moment.
-			 * TODO : permettre de stocker plus d'un polygone à la fois,
-			 * ou au moins d'effacer le polygone actuel.
-			 */
-		}
+			// Bresenham entre le point cliqué et celui cliqué précédemment
 
-		printf("--> ajout du sommet %d, %d\n", x, y);
-		polygon_append_vertex(drawing.p_active, x, y);
+			if (drawing.p_active == NULL)
+				drawing_new_polygon(&drawing);
+
+			if(polygon_is_closed(drawing.p_active))
+			{
+				printf("--> le polygone est fermé donc je ne fais rien\n");
+				return;
+				/*
+				 * Rien pour le moment.
+				 * TODO : permettre de stocker plus d'un polygone à la fois,
+				 * ou au moins d'effacer le polygone actuel.
+				 */
+			}
+
+			printf("--> ajout du sommet %d, %d\n", x, y);
+			polygon_append_vertex(drawing.p_active, x, y);
+		}
+		if(mode == VERTEX)
+			drawing.v_selected = closestVertex(drawing.p_active, x, y);
 	}
 
 	// Bouton droit...
@@ -112,8 +116,8 @@ void keyboard_CB(unsigned char key, int x, int y)
 				polygon_remove_vertex(drawing.p_active, drawing.p_active->v_last);
 			if(mode == VERTEX)
 			{
-				polygon_remove_vertex(drawing.p_active, selected);
-				selected = drawing.p_active->v_list;
+				polygon_remove_vertex(drawing.p_active, drawing.v_selected);
+				drawing.v_selected = drawing.p_active->v_list;
 			}
 		}
 		break;
@@ -132,10 +136,12 @@ void keyboard_CB(unsigned char key, int x, int y)
 	case 'v':
 		mode = VERTEX;
 		if(drawing.p_active != NULL)
-			selected = drawing.p_active->v_list;
+			drawing.v_selected = drawing.p_active->v_list;
 		break;
 	case 'e':
 		mode = EDGE;
+		if(drawing.p_active != NULL)
+			drawing.v_selected = drawing.p_active->v_list;
 		break;
 	case 'c':
 		if (polygon_toggle_close(drawing.p_active))
@@ -175,36 +181,37 @@ void special_CB(int key, int x, int y)
 	case GLUT_KEY_UP    :
 				if(mode == APPEND)
 					I_move(img,0,d);
-				if(mode == VERTEX && selected != NULL)
-					(selected->y)++;
+				if(mode == VERTEX && drawing.v_selected != NULL)
+					(drawing.v_selected->y)++;
 				break;
 	case GLUT_KEY_DOWN  :
 				if(mode == APPEND)
 					I_move(img,0,-d);
-				if(mode == VERTEX && selected != NULL)
-					(selected->y)--;
+				if(mode == VERTEX && drawing.v_selected != NULL)
+					(drawing.v_selected->y)--;
 				break;
 	case GLUT_KEY_LEFT  :
 				if(mode == APPEND)
 					I_move(img,d,0);
-				if(mode == VERTEX && selected != NULL)
-					(selected->x)--;
+				if(mode == VERTEX && drawing.v_selected != NULL)
+					(drawing.v_selected->x)--;
 				break;
 	case GLUT_KEY_RIGHT :
 				if(mode == APPEND)
 					I_move(img,-d,0);
-				if(mode == VERTEX && selected != NULL)
-					(selected->x)++;
+				if(mode == VERTEX && drawing.v_selected != NULL)
+					(drawing.v_selected->x)++;
 				break;
 	case GLUT_KEY_PAGE_UP :
-				if(mode == VERTEX && selected->next != NULL)
-					selected = selected->next;
-				// TODO if(mode == EDGE)
+				if((mode == VERTEX && drawing.v_selected->next != NULL) || 
+				(mode == EDGE && polygon_is_closed(drawing.p_active)))
+					drawing.v_selected = drawing.v_selected->next;
+				if(mode == EDGE && !polygon_is_closed(drawing.p_active) && drawing.v_selected != drawing.p_active->v_last)
+					drawing.v_selected = drawing.v_selected->next;
 				break;
 	case GLUT_KEY_PAGE_DOWN :
-				if(mode == VERTEX && selected->prev != NULL)
-					selected = selected->prev;
-				// TODO if(mode == EDGE)
+				if((mode == VERTEX || mode == EDGE) && drawing.v_selected->prev != NULL)
+					drawing.v_selected = drawing.v_selected->prev;
 				break;
 	default :
 				fprintf(stderr,"special_CB : %d : unknown key.\n",key);
