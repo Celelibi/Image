@@ -21,11 +21,10 @@
 #include "Image.h"
 #include "draw.h"
 
-enum {APPEND, VERTEX, EDGE};
+enum mode current_mode = APPEND;
 
 Image *img;
 struct drawing drawing;
-int mode = APPEND;
 
 //------------------------------------------------------------------
 //	C'est le display callback. A chaque fois qu'il faut
@@ -38,7 +37,7 @@ void display_CB()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	drawing_rasterize(&drawing, img);
+	drawing_rasterize(&drawing, img, current_mode);
 	I_draw(img);
 
 	glutSwapBuffers();
@@ -58,7 +57,7 @@ void mouse_CB(int button, int state, int x, int y)
 		y = img->_height - y; // inversion
 		printf("--> clic détecté à %d, %d\n", x, y);
 
-		if(mode == APPEND)
+		if(current_mode == APPEND)
 		{
 			// Bresenham entre le point cliqué et celui cliqué précédemment
 
@@ -79,8 +78,10 @@ void mouse_CB(int button, int state, int x, int y)
 			printf("--> ajout du sommet %d, %d\n", x, y);
 			polygon_append_vertex(drawing.p_active, x, y);
 		}
-		if(mode == VERTEX)
+		if(current_mode == VERTEX)
 			drawing.v_selected = closestVertex(drawing.p_active, x, y);
+		if(current_mode == EDGE)
+			drawing.v_selected = closestEdge(drawing.p_active, x, y);
 	}
 
 	// Bouton droit...
@@ -88,6 +89,22 @@ void mouse_CB(int button, int state, int x, int y)
 	{
 		// relégué au bouton droit
 		I_focusPoint(img,x,img->_height-y);
+	}
+
+	else if(button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN)
+	{
+		if(current_mode == EDGE && drawing.p_active != NULL && drawing.v_selected != NULL && drawing.v_selected->next != NULL)
+		{
+			struct vertex *new = malloc(sizeof(*new));
+			memset(new, 0, sizeof(*new));
+			new->x = x;
+			new->y = img->_height-y;
+
+			new->next = drawing.v_selected->next;
+			new->prev = drawing.v_selected;
+			drawing.v_selected->next->prev = new;
+			drawing.v_selected->next = new;
+		}
 	}
 
 	glutPostRedisplay();
@@ -112,9 +129,9 @@ void keyboard_CB(unsigned char key, int x, int y)
 	case 127: // Suppr
 		if(drawing.p_active->v_list != NULL)
 		{
-			if(mode == APPEND)
+			if(current_mode == APPEND)
 				polygon_remove_vertex(drawing.p_active, drawing.p_active->v_last);
-			if(mode == VERTEX)
+			if(current_mode == VERTEX)
 			{
 				polygon_remove_vertex(drawing.p_active, drawing.v_selected);
 				drawing.v_selected = drawing.p_active->v_list;
@@ -131,15 +148,15 @@ void keyboard_CB(unsigned char key, int x, int y)
 		I_zoomInit(img);
 		break;
 	case 'a':
-		mode = APPEND;
+		current_mode = APPEND;
 		break;
 	case 'v':
-		mode = VERTEX;
+		current_mode = VERTEX;
 		if(drawing.p_active != NULL)
 			drawing.v_selected = drawing.p_active->v_list;
 		break;
 	case 'e':
-		mode = EDGE;
+		current_mode = EDGE;
 		if(drawing.p_active != NULL)
 			drawing.v_selected = drawing.p_active->v_list;
 		break;
@@ -179,38 +196,39 @@ void special_CB(int key, int x, int y)
 	switch(key)
 	{
 	case GLUT_KEY_UP    :
-				if(mode == APPEND)
+				if(current_mode == APPEND)
 					I_move(img,0,d);
-				if(mode == VERTEX && drawing.v_selected != NULL)
+				if(current_mode == VERTEX && drawing.v_selected != NULL)
 					(drawing.v_selected->y)++;
 				break;
 	case GLUT_KEY_DOWN  :
-				if(mode == APPEND)
+				if(current_mode == APPEND)
 					I_move(img,0,-d);
-				if(mode == VERTEX && drawing.v_selected != NULL)
+				if(current_mode == VERTEX && drawing.v_selected != NULL)
 					(drawing.v_selected->y)--;
 				break;
 	case GLUT_KEY_LEFT  :
-				if(mode == APPEND)
+				if(current_mode == APPEND)
 					I_move(img,d,0);
-				if(mode == VERTEX && drawing.v_selected != NULL)
+				if(current_mode == VERTEX && drawing.v_selected != NULL)
 					(drawing.v_selected->x)--;
 				break;
 	case GLUT_KEY_RIGHT :
-				if(mode == APPEND)
+				if(current_mode == APPEND)
 					I_move(img,-d,0);
-				if(mode == VERTEX && drawing.v_selected != NULL)
+				if(current_mode == VERTEX && drawing.v_selected != NULL)
 					(drawing.v_selected->x)++;
 				break;
 	case GLUT_KEY_PAGE_UP :
-				if((mode == VERTEX && drawing.v_selected->next != NULL) || 
-				(mode == EDGE && polygon_is_closed(drawing.p_active)))
+				if((current_mode == VERTEX && drawing.v_selected->next != NULL) || 
+				(current_mode == EDGE && polygon_is_closed(drawing.p_active)))
 					drawing.v_selected = drawing.v_selected->next;
-				if(mode == EDGE && !polygon_is_closed(drawing.p_active) && drawing.v_selected != drawing.p_active->v_last)
+				if(current_mode == EDGE && !polygon_is_closed(drawing.p_active) && 
+				drawing.v_selected->next != drawing.p_active->v_last)
 					drawing.v_selected = drawing.v_selected->next;
 				break;
 	case GLUT_KEY_PAGE_DOWN :
-				if((mode == VERTEX || mode == EDGE) && drawing.v_selected->prev != NULL)
+				if((current_mode == VERTEX || current_mode == EDGE) && drawing.v_selected->prev != NULL)
 					drawing.v_selected = drawing.v_selected->prev;
 				break;
 	default :

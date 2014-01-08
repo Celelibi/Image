@@ -4,6 +4,11 @@
 #include "Image.h"
 
 /*
+* Différents modes de fonctionnement du programme
+*/
+enum mode {APPEND, VERTEX, EDGE};
+
+/*
 * Structure de liste chaînée pour stocker des coordonnées
 */
 
@@ -52,7 +57,7 @@ void drawing_new_polygon(struct drawing *d);
 
 void segment_rasterize(Image *img, int xA, int yA, int xB, int yB);
 void polygon_rasterize(struct polygon *p, Image *img);
-void drawing_rasterize(struct drawing *d, Image *img);
+void drawing_rasterize(struct drawing *d, Image *img, enum mode current_mode);
 
 struct vertex* closestVertex(struct polygon *p, int x, int y);
 struct vertex* closestEdge(struct polygon *p, int x, int y);
