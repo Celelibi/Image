@@ -41,29 +41,38 @@ struct drawing {
 	struct vertex* v_selected;
 };
 
-/*
-* Des fonctions pour les gouverner tous, et dans la RAM les allouer...
-*/
-
+/* Crée un nouveau point en fin de liste */
 struct vertex* polygon_append_vertex(struct polygon* poly, int x, int y);
+
+/* Supprime un point*/
 struct vertex* polygon_remove_vertex(struct polygon* poly, struct vertex* victim);
 
-/* Ferme un polygone overt et inversement. Renvoi 1 si le polygone vient d'être fermé, 0 sinon. */
+/* Ferme un polygone ouvert et inversement. Renvoie 1 si le polygone vient d'être fermé, 0 sinon. */
 int polygon_toggle_close(struct polygon* poly);
+
+/* Dit si le polygone est fermé ou non */
 int polygon_is_closed(struct polygon* poly);
 
-/* Ajoute un polygone vide à la fin de la liste et le renvoi et le défini comme polygone actif */
+/* Ajoute un polygone vide à la fin de la liste et le renvoie et le définit comme polygone actif */
 void drawing_new_polygon(struct drawing *d);
 
+/* Trace une droite de Bresenham entre deux points donnés */
 void segment_rasterize(Image *img, int xA, int yA, int xB, int yB);
+
+/* Dessine tous les points d'un polygone */
 void polygon_rasterize(struct polygon *p, Image *img);
+
+/* Dessine tous les polygones, change la couleur du point ou segment sélectionné */
 void drawing_rasterize(struct drawing *d, Image *img, enum mode current_mode);
 
+/* Renvoie le point le plus proche du clic */
 struct vertex* closestVertex(struct polygon *p, int x, int y);
+
+/* Renvoie l'arête la plus proche du clic */
 struct vertex* closestEdge(struct polygon *p, int x, int y);
 
 /*
-* À ajouter plus tard :
+* À ajouter si nécessaire :
 * Insertion d'un sommet en plein milieu de la liste
 */
 

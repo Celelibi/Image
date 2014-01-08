@@ -650,6 +650,7 @@ void drawing_rasterize(struct drawing *d, Image *img, enum mode current_mode)
 	Color black = C_new(0,0,0);
 	Color white = C_new(1,1,1);
 	Color green = C_new(0,1,0);
+	Color red = C_new(1,0,0);
 	
 	I_fill(img, black);
 	I_changeColor(img, white);
@@ -671,13 +672,14 @@ void drawing_rasterize(struct drawing *d, Image *img, enum mode current_mode)
 	
 		if(current_mode == EDGE && d->p_active != NULL && d->v_selected != NULL && d->v_selected->next != NULL)
 		{
-			I_changeColor(img, green);
+			I_changeColor(img, red);
 			segment_rasterize(img, d->v_selected->x, d->v_selected->y, d->v_selected->next->x, d->v_selected->next->y);
 		}
 		p = p->next;
 	}	
 }
 
+/* Renvoie le point le plus proche du clic */
 struct vertex* closestVertex(struct polygon *p, int x, int y)
 {
 	if(p != NULL && p->v_list != NULL)
@@ -696,7 +698,7 @@ struct vertex* closestVertex(struct polygon *p, int x, int y)
 				ret = cursor;
 			}
 			cursor = cursor->next;
-		}while(cursor != p->v_last); // Tant qu'on n'a pas étudié chaque sommet de p
+		}while(cursor != p->v_last->next); // Tant qu'on n'a pas étudié chaque sommet de p
 	
 		return ret;
 	}
@@ -707,6 +709,7 @@ struct vertex* closestVertex(struct polygon *p, int x, int y)
 	}
 }
 
+/* Renvoie l'arête la plus proche du clic */
 struct vertex* closestEdge(struct polygon *p, int x, int y)
 {
 	struct vertex* ret = closestVertex(p, x, y);
