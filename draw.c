@@ -384,6 +384,8 @@ struct active_edge {
 	struct vertex* vymax;
 	int x_inter;
 	int x_err;
+	int divfix_start;
+	int divfix_end;
 	int dx;
 	int dy;
 	struct active_edge* next;
@@ -393,7 +395,18 @@ struct active_edge* active_edge_merge_lists(struct active_edge* ael1, struct act
 {
 	struct active_edge *ret, *retcur;
 
-	if (ael1->x_inter <= ael2->x_inter)
+	if (ael1->x_inter < ael2->x_inter)
+	{
+		ret = ael1;
+		ael1 = ael1->next;
+	}
+	else if (ael1->x_inter > ael2->x_inter)
+	{
+		ret = ael2;
+		ael2 = ael2->next;
+	}
+	/* In case of equality, sort by vymax->x */
+	else if (ael1->vymax->x <= ael2->vymax->x)
 	{
 		ret = ael1;
 		ael1 = ael1->next;
@@ -408,7 +421,18 @@ struct active_edge* active_edge_merge_lists(struct active_edge* ael1, struct act
 
 	while (ael1 != NULL && ael2 != NULL)
 	{
-		if (ael1->x_inter <= ael2->x_inter)
+		if (ael1->x_inter < ael2->x_inter)
+		{
+			retcur->next = ael1;
+			ael1 = ael1->next;
+		}
+		else if (ael1->x_inter > ael2->x_inter)
+		{
+			retcur->next = ael2;
+			ael2 = ael2->next;
+		}
+		/* In case of equality, sort by vymax->x */
+		else if (ael1->vymax->x <= ael2->vymax->x)
 		{
 			retcur->next = ael1;
 			ael1 = ael1->next;
@@ -481,7 +505,37 @@ void active_edge_init(struct vertex* vymin, struct vertex* vymax, struct active_
 	ae->x_inter = ae->vymin->x;
 	ae->dx = ae->vymax->x - ae->vymin->x;
 	ae->dy = ae->vymax->y - ae->vymin->y;
-	ae->x_err = -ae->dy;
+
+	if (ae->dx > 0)
+	{
+		if (ae->dx >= ae->dy)
+		{
+			ae->x_err = -ae->dx;
+			ae->divfix_start = 2 * ae->dx;
+			ae->divfix_end = 2 * ae->dy;
+		}
+		else
+		{
+			ae->x_err = ae->dy; // OK avec la version normale
+			ae->divfix_start = 0;
+			ae->divfix_end = 0;
+		}
+	}
+	else
+	{
+		if (-ae->dx >= ae->dy)
+		{
+			ae->x_err = -ae->dx;
+			ae->divfix_start = -2 * ae->dy + 1;
+			ae->divfix_end = 2 * ae->dx;
+		}
+		else
+		{
+			ae->x_err = -ae->dy; // OK avec la version normale
+			ae->divfix_start = 0;
+			ae->divfix_end = 0;
+		}
+	}
 	ae->dx *= 2;
 	ae->dy *= 2;
 	ae->next = next;
@@ -592,15 +646,21 @@ static void polygon_fill(struct polygon* p, Image* img)
 			}
 
 			for (x = ae->x_inter + 1; x < aen->x_inter; x++)
-				I_plotColor(img, x, y, C_new(0, 1, 1));
+				I_plot(img, x, y);
 
 			ae->x_err += ae->dx;
-			ae->x_inter += ae->x_err / ae->dy;
-			ae->x_err %= ae->dy;
+			{
+				int xdiff = (ae->x_err + ae->divfix_start) / ae->dy;
+				ae->x_inter += xdiff;
+				ae->x_err -= xdiff * ae->dy;
+			}
 
 			aen->x_err += aen->dx;
-			aen->x_inter += aen->x_err / aen->dy;
-			aen->x_err %= aen->dy;
+			{
+				int xdiff = (aen->x_err + aen->divfix_end) / aen->dy;
+				aen->x_inter += xdiff;
+				aen->x_err -= xdiff * aen->dy;
+			}
 
 			aep = aen;
 			ae = aen->next;
@@ -632,6 +692,7 @@ static void polygon_fill(struct polygon* p, Image* img)
 		}
 
 		/* re-sort the active edge list */
+		/* TODO: only sort when new vertex have been added */
 		ael = active_edge_sort(ael, ael_size);
 
 	}
