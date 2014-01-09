@@ -51,10 +51,11 @@ void display_CB()
 
 void mouse_CB(int button, int state, int x, int y)
 {
+	y = img->_height - y; // inversion
+
 	// Lors d'un clic sur le bouton gauche de la souris...
 	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
-		y = img->_height - y; // inversion
 		printf("--> clic détecté à %d, %d\n", x, y);
 
 		if(current_mode == APPEND)
@@ -94,17 +95,7 @@ void mouse_CB(int button, int state, int x, int y)
 	else if(button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN)
 	{
 		if(current_mode == EDGE && drawing.p_active != NULL && drawing.v_selected != NULL && drawing.v_selected->next != NULL)
-		{
-			struct vertex *new = malloc(sizeof(*new));
-			memset(new, 0, sizeof(*new));
-			new->x = x;
-			new->y = img->_height-y;
-
-			new->next = drawing.v_selected->next;
-			new->prev = drawing.v_selected;
-			drawing.v_selected->next->prev = new;
-			drawing.v_selected->next = new;
-		}
+			polygon_insert_vertex_after(drawing.p_active, drawing.v_selected, x, y);
 	}
 
 	glutPostRedisplay();
