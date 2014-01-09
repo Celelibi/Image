@@ -570,26 +570,38 @@ static void polygon_fill(struct polygon* p, Image* img)
 	{
 		/* Les sommets du haut sont forcément des angles,
 		 * donc vont par deux */
-		struct active_edge *ae1, *ae2;
+		struct active_edge *ae;
 
-		ae1 = malloc(sizeof(*ae1));
-		ae2 = malloc(sizeof(*ae2));
-		if (ae1 == NULL || ae2 == NULL)
+		/* N'ajoute que les arêtes non-horizontales */
+		if (yvertex[yvertex_bound_idx]->next->y > ymin)
 		{
-			perror("malloc");
-			exit(EXIT_FAILURE);
+			ae = malloc(sizeof(*ae));
+			if (ae == NULL)
+			{
+				perror("malloc");
+				exit(EXIT_FAILURE);
+			}
+			active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->next, ael, ae);
+			ael = ae;
+			ael_size++;
 		}
-
-		active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->next, ae2, ae1);
-		active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->prev, ael, ae2);
-
-		ael = ae1;
-		ael_size += 2;
+		if (yvertex[yvertex_bound_idx]->prev->y > ymin)
+		{
+			ae = malloc(sizeof(*ae));
+			if (ae == NULL)
+			{
+				perror("malloc");
+				exit(EXIT_FAILURE);
+			}
+			active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->prev, ael, ae);
+			ael = ae;
+			ael_size++;
+		}
 	}
 
 	ael = active_edge_sort(ael, ael_size);
 
-	for (y = ymin; y < ymax; y++)
+	for (y = ymin; y <= ymax; y++)
 	{
 		struct active_edge *aep, *ae, *aen; /* prev, current, next */
 		int x;
@@ -597,12 +609,16 @@ static void polygon_fill(struct polygon* p, Image* img)
 		aep = NULL;
 		ae = ael;
 
+		/* TODO: passer cette boucle dans une autre fonction */
 		while (ae != NULL)
 		{
 			aen = ae->next;
 
 			/*
 			 * Remplacement de l'edge qu'on quitte par celui qui le remplace
+			 * TODO: factoriser ce code abominable
+			 * idée1: Faire une fonction remove_v_vertex qu'on appelle sur ae et aen
+			 * et qui vire les deux arêtes de la liste et qui gère les cas horizontaux
 			 */
 			if (ae->vymax->y == y)
 			{
@@ -610,6 +626,89 @@ static void polygon_fill(struct polygon* p, Image* img)
 					active_edge_init(ae->vymax, ae->vymax->next, ae->next, ae);
 				else if (ae->vymax->prev->y > y)
 					active_edge_init(ae->vymax, ae->vymax->prev, ae->next, ae);
+				else if (ae->vymax->prev == ae->vymin && ae->vymax->next->y == y)
+				{
+					/* On vient de tomber sur une arête horizontale
+					 * On poursuit donc la recherche jusqu'à en trouver une
+					 * non-horizontale. */
+					struct vertex *tmp = ae->vymax->next->next;
+					while (tmp->y == y)
+						tmp = tmp->next;
+
+					/* On a trouvé une arête qui descend
+					 * on fait comme au dessus */
+					if (tmp->y > y)
+					{
+						active_edge_init(tmp->prev, tmp, ae->next, ae);
+						/* Le tri est obligatoire parce qu'un déplacement
+						 * horizontal a pu croiser plusieurs arêtes à la fois */
+						ael = active_edge_sort(ael, ael_size);
+
+						/* La liste est potentiellement toute chamboulée
+						 * On recommence depuis le début
+						 * TODO: checker si ae est passé derrière aen et ne pas recommencer
+						 * à parcourir la liste du début */
+						aep = NULL;
+						ae = ael;
+						continue;
+					}
+
+					/* On a trouvé une arête qui remonte
+					 * on fait comme en dessous (élimination et free de ae) */
+					if (tmp->y < y)
+					{
+						/* Élimination ae
+						 * On passe temporairement avec un compte d'arêtes actives
+						 * impaire pour gérer correctement le cas des polygones
+						 * croisés comme l'étoile.
+						 * Le compte repassera paire à une prochaine itération
+						 * (pas forcément LA prochaine itération) qui repassera dans
+						 * le cas
+						 * "ae->vymax->next == ae->vymin && ae->vymax->prev->y == y"
+						 * ci-dessous. */
+						if (aep == NULL)
+							ael = aen;
+						else
+							aep->next = aen;
+
+						free(ae);
+						ae = aen;
+						ael_size--;
+						continue;
+					}
+				}
+				else if (ae->vymax->next == ae->vymin && ae->vymax->prev->y == y)
+				{
+					/* Pareil, mais parcourt prev au lieu de next */
+					struct vertex *tmp = ae->vymax->prev->prev;
+					while (tmp->y == y)
+						tmp = tmp->prev;
+
+					if (tmp->y > y)
+					{
+						active_edge_init(tmp->next, tmp, ae->next, ae);
+						ael = active_edge_sort(ael, ael_size);
+
+						/* TODO: checker si tmp est derrière aen et ne pas recommencer
+						 * à parcourir la liste du début */
+						aep = NULL;
+						ae = ael;
+						continue;
+					}
+
+					if (tmp->y < y)
+					{
+						if (aep == NULL)
+							ael = aen;
+						else
+							aep->next = aen;
+
+						free(ae);
+						ae = aen;
+						ael_size--;
+						continue;
+					}
+				}
 				else
 				{
 					/* On a atteint un sommet en V dans lequel on coloriait,
@@ -633,6 +732,74 @@ static void polygon_fill(struct polygon* p, Image* img)
 					active_edge_init(aen->vymax, aen->vymax->next, aen->next, aen);
 				else if (aen->vymax->prev->y > y)
 					active_edge_init(aen->vymax, aen->vymax->prev, aen->next, aen);
+				else if (aen->vymax->prev == aen->vymin && aen->vymax->next->y == y)
+				{
+					/* On vient de tomber sur une arête horizontale
+					 * On poursuit donc la recherche jusqu'à en trouver une
+					 * non-horizontale. */
+					struct vertex *tmp = aen->vymax->next->next;
+					while (tmp->y == y)
+						tmp = tmp->next;
+
+					/* On a trouvé une arête qui descend
+					 * on fait comme au dessus */
+					if (tmp->y > y)
+					{
+						active_edge_init(tmp->prev, tmp, aen->next, ae);
+						/* Le tri est obligatoire parce qu'un déplacement
+						 * horizontal a pu croiser plusieurs arêtes à la fois */
+						ael = active_edge_sort(ael, ael_size);
+
+						/* La liste est potentiellement toute chamboulée
+						 * On recommence depuis le début
+						 * TODO: checker si ae est passé derrière aen et ne pas recommencer
+						 * à parcourir la liste du début */
+						aep = NULL;
+						ae = ael;
+						continue;
+					}
+
+					/* On a trouvé une arête qui remonte
+					 * on fait comme en dessous (élimination et free de aen+aen->next) */
+					if (tmp->y < y)
+					{
+						ae->next = aen->next->next;
+
+						free(aen->next);
+						free(aen);
+						ael_size -= 2;
+						continue;
+					}
+				}
+				else if (aen->vymax->next == aen->vymin && aen->vymax->prev->y == y)
+				{
+					/* Pareil, mais parcourt prev au lieu de next */
+					struct vertex *tmp = aen->vymax->prev->prev;
+					while (tmp->y == y)
+						tmp = tmp->prev;
+
+					if (tmp->y > y)
+					{
+						active_edge_init(tmp->next, tmp, aen->next, ae);
+						ael = active_edge_sort(ael, ael_size);
+
+						/* TODO: checker si tmp est derrière aen et ne pas recommencer
+						 * à parcourir la liste du début */
+						aep = NULL;
+						ae = ael;
+						continue;
+					}
+
+					if (tmp->y < y)
+					{
+						ae->next = aen->next->next;
+
+						free(aen->next);
+						free(aen);
+						ael_size -= 2;
+						continue;
+					}
+				}
 				else {
 					/* On a atteint un sommet en V dans lequel on ne coloriait pas,
 					 * on élimine le couple d'arête aen+aen->next */
@@ -671,29 +838,59 @@ static void polygon_fill(struct polygon* p, Image* img)
 		while (yvertex_bound_idx < p->vertexcnt && yvertex[yvertex_bound_idx]->y == y)
 		{
 			struct vertex *v = yvertex[yvertex_bound_idx];
-			if (v->next->y > y && v->prev->y > y)
-			{
-				struct active_edge *ae1, *ae2;
+			struct active_edge *ae;
+			int next_has_greater;
+			int prev_has_greater;
+			struct vertex *tmp;
 
-				ae1 = malloc(sizeof(*ae1));
-				ae2 = malloc(sizeof(*ae2));
-				if (ae1 == NULL || ae2 == NULL)
+			/* Ce sommet est au milieu d'une suite d'arêtes horizontales
+			 * on ne cherche pas à ajouter une seule de ces arêtes */
+			if (v->next->y == y && v->prev->y == y)
+				continue;
+
+			tmp = v->next;
+			while (tmp->y == y)
+				tmp = tmp->next;
+			next_has_greater = tmp->y > y;
+
+			tmp = v->prev;
+			while (tmp->y == y)
+				tmp = tmp->prev;
+			prev_has_greater = tmp->y > y;
+
+
+			/* N'ajoute que les arêtes non-horizontales */
+			if (v->next->y > y && prev_has_greater)
+			{
+				ae = malloc(sizeof(*ae));
+				if (ae == NULL)
 				{
 					perror("malloc");
 					exit(EXIT_FAILURE);
 				}
-
-				active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->next, ae2, ae1);
-				active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->prev, ael, ae2);
-
-				ael = ae1;
-				ael_size += 2;
+				active_edge_init(v, v->next, ael, ae);
+				ael = ae;
+				ael_size++;
 			}
+			if (v->prev->y > y && next_has_greater)
+			{
+				ae = malloc(sizeof(*ae));
+				if (ae == NULL)
+				{
+					perror("malloc");
+					exit(EXIT_FAILURE);
+				}
+				active_edge_init(v, v->prev, ael, ae);
+				ael = ae;
+				ael_size++;
+			}
+
 			yvertex_bound_idx++;
 		}
 
-		/* re-sort the active edge list */
-		/* TODO: only sort when new vertex have been added */
+		/* re-trie la liste des arêtes actives */
+		/* TODO: Ne trier que quand des arêtes ont été ajoutées
+		 * Et échanger les arêtes qui ont été croisées sans appeller active_edge_sort */
 		ael = active_edge_sort(ael, ael_size);
 
 	}
