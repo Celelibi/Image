@@ -470,10 +470,11 @@ struct active_edge* active_edge_sort(struct active_edge* ael, size_t size)
 	struct active_edge *ael1, *ael2;
 	size_t size1, size2;
 
-	if (size == 1) {
+	if (size == 1)
 		ael->next = NULL;
+
+	if (size <= 1)
 		return ael;
-	}
 
 	/* TODO: Améliorer cet algo en découpant en "runs" */
 	/* Coupe la liste en deux */
