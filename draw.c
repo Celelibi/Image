@@ -147,7 +147,7 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 						e = dx; // e est positif
 						dx = 2 * e;
 						dy = 2 * dy;
-						for (x = xA; x < xB; x++)
+						for (x = xA; x <= xB; x++)
 						{
 							I_plot(img, x, y);
 							e = e - dy;
@@ -164,7 +164,7 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 						e = dy; // e est positif
 						dy = 2 * e;
 						dx = 2 * dx;
-						for (y = yA; y < yB; y++)
+						for (y = yA; y <= yB; y++)
 						{
 							I_plot(img, x, y);
 							e = e - dx;
@@ -185,7 +185,7 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 						e = dx; // e est positif
 						dx = 2 * e;
 						dy = 2 * dy;
-						for (x = xA; x < xB; x++)
+						for (x = xA; x <= xB; x++)
 						{
 							I_plot(img, x, y);
 							e = e + dy;
@@ -202,7 +202,7 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 						e = dy; // e est négatif
 						dy = 2 * e;
 						dx = 2 * dx;
-						for (y = yA; y > yB; y--)
+						for (y = yA; y >= yB; y--)
 						{
 							I_plot(img, x, y);
 							e = e + dx;
@@ -218,7 +218,7 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 			else // dy = 0
 			{
 				// vecteur horizontal vers la droite
-				for (x = xA; x < xB; x++)
+				for (x = xA; x <= xB; x++)
 					I_plot(img, x, y);
 			}
 		}
@@ -235,7 +235,7 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 						e = dx; // e est négatif
 						dx = 2 * e;
 						dy = 2 * dy;
-						for (x = xA; x > xB; x--)
+						for (x = xA; x >= xB; x--)
 						{
 							I_plot(img, x, y);
 							e = e + dy;
@@ -252,7 +252,7 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 						e = dy; // e est positif
 						dy = 2 * e;
 						dx = 2 * dx;
-						for (y = yA; y < yB; y++)
+						for (y = yA; y <= yB; y++)
 						{
 							I_plot(img, x, y);
 							e = e + dx;
@@ -273,7 +273,7 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 						e = dx; // e est négatif
 						dx = 2 * e;
 						dy = 2 * dy;
-						for (x = xA; x > xB; x--)
+						for (x = xA; x >= xB; x--)
 						{
 							I_plot(img, x, y);
 							e = e - dy;
@@ -290,7 +290,7 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 						e = dy; // e est négatif
 						dy = 2 * e;
 						dx = 2 * dx;
-						for (y = yA; y > yB; y--)
+						for (y = yA; y >= yB; y--)
 						{
 							I_plot(img, x, y);
 							e = e - dx;
@@ -306,7 +306,7 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 			else // dy = 0
 			{
 				// vecteur horizontal vers la gauche
-				for (x = xA; x > xB; x--)
+				for (x = xA; x >= xB; x--)
 					I_plot(img, x, y);
 			}
 		}
@@ -318,13 +318,13 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 			if (dy > 0)
 			{
 				// vecteur vertical vers le haut
-				for (y = yA; y < yB; y++)
+				for (y = yA; y <= yB; y++)
 					I_plot(img, x, y);
 			}
 			else // dy < 0
 			{
 				// vecteur vertical vers le bas
-				for (y = yA; y > yB; y--)
+				for (y = yA; y >= yB; y--)
 					I_plot(img, x, y);
 			}
 		}
