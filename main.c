@@ -123,7 +123,7 @@ void keyboard_CB(unsigned char key, int x, int y)
 	// fprintf(stderr,"key=%d\n",key);
 	switch(key)
 	{
-	case 27 : // Echap
+	case 27: // Echap
 		glutLeaveMainLoop();
 		break;
 	case 127: // Suppr
@@ -195,44 +195,44 @@ void special_CB(int key, int x, int y)
 
 	switch(key)
 	{
-	case GLUT_KEY_UP    :
-				if(current_mode == APPEND)
-					I_move(img,0,d);
-				if(current_mode == VERTEX && drawing.v_selected != NULL)
-					(drawing.v_selected->y)++;
-				break;
-	case GLUT_KEY_DOWN  :
-				if(current_mode == APPEND)
-					I_move(img,0,-d);
-				if(current_mode == VERTEX && drawing.v_selected != NULL)
-					(drawing.v_selected->y)--;
-				break;
-	case GLUT_KEY_LEFT  :
-				if(current_mode == APPEND)
-					I_move(img,d,0);
-				if(current_mode == VERTEX && drawing.v_selected != NULL)
-					(drawing.v_selected->x)--;
-				break;
-	case GLUT_KEY_RIGHT :
-				if(current_mode == APPEND)
-					I_move(img,-d,0);
-				if(current_mode == VERTEX && drawing.v_selected != NULL)
-					(drawing.v_selected->x)++;
-				break;
-	case GLUT_KEY_PAGE_UP :
-				if((current_mode == VERTEX && drawing.v_selected->next != NULL) || 
+	case GLUT_KEY_UP:
+		if(current_mode == APPEND)
+			I_move(img,0,d);
+		if(current_mode == VERTEX && drawing.v_selected != NULL)
+			(drawing.v_selected->y)++;
+		break;
+	case GLUT_KEY_DOWN:
+		if(current_mode == APPEND)
+			I_move(img,0,-d);
+		if(current_mode == VERTEX && drawing.v_selected != NULL)
+			(drawing.v_selected->y)--;
+		break;
+	case GLUT_KEY_LEFT:
+		if(current_mode == APPEND)
+			I_move(img,d,0);
+		if(current_mode == VERTEX && drawing.v_selected != NULL)
+			(drawing.v_selected->x)--;
+		break;
+	case GLUT_KEY_RIGHT:
+		if(current_mode == APPEND)
+			I_move(img,-d,0);
+		if(current_mode == VERTEX && drawing.v_selected != NULL)
+			(drawing.v_selected->x)++;
+		break;
+	case GLUT_KEY_PAGE_UP:
+		if((current_mode == VERTEX && drawing.v_selected->next != NULL) ||
 				(current_mode == EDGE && polygon_is_closed(drawing.p_active)))
-					drawing.v_selected = drawing.v_selected->next;
-				if(current_mode == EDGE && !polygon_is_closed(drawing.p_active) && 
+			drawing.v_selected = drawing.v_selected->next;
+		if(current_mode == EDGE && !polygon_is_closed(drawing.p_active) &&
 				drawing.v_selected->next != drawing.p_active->v_last)
-					drawing.v_selected = drawing.v_selected->next;
-				break;
-	case GLUT_KEY_PAGE_DOWN :
-				if((current_mode == VERTEX || current_mode == EDGE) && drawing.v_selected->prev != NULL)
-					drawing.v_selected = drawing.v_selected->prev;
-				break;
-	default :
-				fprintf(stderr,"special_CB : %d : unknown key.\n",key);
+			drawing.v_selected = drawing.v_selected->next;
+		break;
+	case GLUT_KEY_PAGE_DOWN:
+		if((current_mode == VERTEX || current_mode == EDGE) && drawing.v_selected->prev != NULL)
+			drawing.v_selected = drawing.v_selected->prev;
+		break;
+	default:
+		fprintf(stderr,"special_CB : %d : unknown key.\n",key);
 	}
 	glutPostRedisplay();
 }
