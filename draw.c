@@ -705,11 +705,16 @@ static void polygon_fill(struct polygon* p, Image* img)
 	free(yvertex);
 }
 
-void drawing_rasterize(struct drawing *d, Image *img)
+void drawing_rasterize(struct drawing *d, Image *img, enum mode current_mode)
 {
 	struct polygon* p;
 	Color black = C_new(0,0,0);
+	Color white = C_new(1,1,1);
+	Color green = C_new(0,1,0);
+	Color red = C_new(1,0,0);
+	
 	I_fill(img, black);
+	I_changeColor(img, white);
 
 	p = d->p_list;
 	while(p != NULL)
@@ -717,7 +722,75 @@ void drawing_rasterize(struct drawing *d, Image *img)
 		polygon_rasterize(p, img);
 		if (p->is_filled)
 			polygon_fill(p, img);
+		if(current_mode == VERTEX && d->p_active != NULL && d->v_selected != NULL)
+		{
+			I_changeColor(img, green);
+			segment_rasterize(img, d->v_selected->x-5, d->v_selected->y-5, d->v_selected->x+5, d->v_selected->y-5);
+			segment_rasterize(img, d->v_selected->x-5, d->v_selected->y-5, d->v_selected->x-5, d->v_selected->y+5);
+			segment_rasterize(img, d->v_selected->x+5, d->v_selected->y+5, d->v_selected->x+5, d->v_selected->y-5);
+			segment_rasterize(img, d->v_selected->x+5, d->v_selected->y+5, d->v_selected->x-5, d->v_selected->y+5);
+		}
+	
+		if(current_mode == EDGE && d->p_active != NULL && d->v_selected != NULL && d->v_selected->next != NULL)
+		{
+			I_changeColor(img, red);
+			segment_rasterize(img, d->v_selected->x, d->v_selected->y, d->v_selected->next->x, d->v_selected->next->y);
+		}
 		p = p->next;
+	}	
+}
+
+/* Renvoie le point le plus proche du clic */
+struct vertex* closestVertex(struct polygon *p, int x, int y)
+{
+	if(p != NULL && p->v_list != NULL)
+	{
+		//Initialisation des paramètres de recherche
+		struct vertex* ret = p->v_list;
+		int min = (x - ret->x) * (x - ret->x) + (y - ret->y) * (y - ret->y);
+		int tmp;
+		struct vertex* cursor = ret->next;
+
+		do
+		{
+			tmp = (x - cursor->x) * (x - cursor->x) + (y - cursor->y) * (y - cursor->y);
+			if(tmp < min){
+				min = tmp;
+				ret = cursor;
+			}
+			cursor = cursor->next;
+		}while(cursor != p->v_last->next); // Tant qu'on n'a pas étudié chaque sommet de p
+	
+		return ret;
+	}
+	else
+	{
+		perror("404 not found");
+		exit(EXIT_FAILURE);
+	}
+}
+
+/* Renvoie l'arête la plus proche du clic */
+struct vertex* closestEdge(struct polygon *p, int x, int y)
+{
+	struct vertex* ret = closestVertex(p, x, y);
+
+	int d_next = 0;
+	int d_prev = 0;
+
+	if(ret->prev != NULL)
+		d_prev = (x - ret->prev->x) * (x - ret->prev->x) + (y - ret->prev->y) * (y - ret->prev->y);
+	if(ret->next != NULL)
+		d_next = (x - ret->next->x) * (x - ret->next->x) + (y - ret->next->y) * (y - ret->next->y);
+
+	if(d_next == 0 || d_prev <= d_next)
+		return ret->prev;
+	else if(d_prev == 0 || d_prev > d_next)
+		return ret;
+	else
+	{
+		perror("404 not found");
+		exit(EXIT_FAILURE);
 	}
 }
 
