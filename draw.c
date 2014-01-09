@@ -4,8 +4,8 @@
 #include <string.h>
 
 /*
-* Ajoute un sommet à une liste de sommets.
-*/
+ * Ajoute un sommet à une liste de sommets.
+ */
 struct vertex* polygon_append_vertex(struct polygon* poly, int x, int y)
 {
 	// Allocation
@@ -41,8 +41,37 @@ struct vertex* polygon_append_vertex(struct polygon* poly, int x, int y)
 }
 
 /*
-* Supprime un sommet de la liste.
-*/
+ * Crée un nouveau point en milieu de liste
+ */
+struct vertex* polygon_insert_vertex_after(struct polygon* poly, struct vertex* v, int x, int y)
+{
+	// Allocation
+	struct vertex* new = malloc(sizeof(*new));
+
+	memset(new, 0, sizeof(*new));
+
+	new->x = x;
+	new->y = y;
+
+	new->prev = v;
+	new->next = v->next;
+	v->next = new;
+
+	if (new->next != NULL)
+		new->next->prev = new;
+
+	if (poly->v_last == v)
+		poly->v_last = new;
+
+	poly->vertexcnt++;
+
+	return new;
+}
+
+
+/*
+ * Supprime un sommet de la liste.
+ */
 struct vertex* polygon_remove_vertex(struct polygon* poly, struct vertex* victim)
 {
 	/*

@@ -44,6 +44,9 @@ struct drawing {
 /* Crée un nouveau point en fin de liste */
 struct vertex* polygon_append_vertex(struct polygon* poly, int x, int y);
 
+/* Crée un nouveau point en milieu de liste */
+struct vertex* polygon_insert_vertex_after(struct polygon* poly, struct vertex* v, int x, int y);
+
 /* Supprime un point*/
 struct vertex* polygon_remove_vertex(struct polygon* poly, struct vertex* victim);
 
