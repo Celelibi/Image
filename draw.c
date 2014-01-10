@@ -90,6 +90,10 @@ struct vertex* polygon_remove_vertex(struct polygon* poly, struct vertex* victim
 	free(victim);
 	poly->vertexcnt--;
 
+	/* On ne ferme pas un polygone de moins de 3 sommets */
+	if (polygon_is_closed(poly) && poly->vertexcnt < 3)
+		polygon_toggle_close(poly);
+
 	return poly->v_list;
 }
 
@@ -102,7 +106,7 @@ int polygon_toggle_close(struct polygon* poly)
 		return 0;
 
 	// Polygone ouvert -> on le ferme
-	if (poly->v_list->prev == NULL)
+	if (poly->v_list->prev == NULL && poly->vertexcnt >= 3)
 	{
 		poly->v_last->next = poly->v_list;
 		poly->v_list->prev = poly->v_last;
