@@ -68,6 +68,12 @@ void polygon_rasterize(struct polygon *p, Image *img);
 /* Dessine tous les polygones, change la couleur du point ou segment sélectionné */
 void drawing_rasterize(struct drawing *d, Image *img, enum mode current_mode);
 
+/* Supprime un polygone d'une drawing et le désalloue */
+void drawing_remove_polygon(struct drawing *d, struct polygon *p);
+
+/* Libère et vide toutes les structures d'une struct drawing */
+void drawing_free(struct drawing *d);
+
 /* Renvoie le point le plus proche du clic */
 struct vertex* closestVertex(struct polygon *p, int x, int y);
 

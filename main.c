@@ -287,5 +287,7 @@ int main(int argc, char **argv)
 
 	glutMainLoop();
 
+	drawing_free(&drawing);
+
 	return EXIT_SUCCESS;
 }

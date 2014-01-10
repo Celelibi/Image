@@ -971,6 +971,40 @@ void drawing_rasterize(struct drawing *d, Image *img, enum mode current_mode)
 	}
 }
 
+/*
+ * Supprime un polygone d'une drawing et le désalloue
+ */
+void drawing_remove_polygon(struct drawing *d, struct polygon *p)
+{
+	struct polygon* q;
+
+	while (p->vertexcnt > 0)
+		polygon_remove_vertex(p, p->v_list);
+
+	if (d->p_list == p)
+		d->p_list = p->next;
+
+	for (q = d->p_list; q != NULL; q = q->next)
+		if (q->next == p)
+			q->next = p->next;
+
+	if (q == NULL)
+		fprintf(stderr, "Suppression d'un polygon étranger au dessin\n");
+
+	free(p);
+}
+
+/*
+ * Libère et vide toutes les structures d'une struct drawing
+ */
+void drawing_free(struct drawing *d)
+{
+	while (d->p_list != NULL)
+		drawing_remove_polygon(d, d->p_list);
+
+	memset(d, 0, sizeof(*d));
+}
+
 /* Renvoie le point le plus proche du clic */
 struct vertex* closestVertex(struct polygon *p, int x, int y)
 {
