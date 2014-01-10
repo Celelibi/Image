@@ -962,18 +962,22 @@ void drawing_rasterize(struct drawing *d, Image *img, enum mode current_mode)
 		polygon_rasterize(p, img);
 		if (p->is_filled)
 			polygon_fill(p, img);
-		if(current_mode == VERTEX && d->p_active != NULL && d->v_selected != NULL)
-		{
-			I_changeColor(img, green);
-			vertex_square_around(d->v_selected, 10, img);
-		}
 
-		if(current_mode == EDGE && d->p_active != NULL && d->v_selected != NULL && d->v_selected->next != NULL)
-		{
-			I_changeColor(img, red);
-			segment_rasterize(img, d->v_selected->x, d->v_selected->y, d->v_selected->next->x, d->v_selected->next->y);
-		}
 		p = p->next;
+	}
+
+	if(current_mode == VERTEX && d->p_active != NULL && d->v_selected != NULL)
+	{
+		I_changeColor(img, green);
+		vertex_square_around(d->v_selected, 10, img);
+		I_changeColor(img, white);
+	}
+
+	if(current_mode == EDGE && d->p_active != NULL && d->v_selected != NULL && d->v_selected->next != NULL)
+	{
+		I_changeColor(img, red);
+		segment_rasterize(img, d->v_selected->x, d->v_selected->y, d->v_selected->next->x, d->v_selected->next->y);
+		I_changeColor(img, white);
 	}
 }
 
