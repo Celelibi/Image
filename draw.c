@@ -1054,26 +1054,53 @@ struct vertex* closestVertex(struct polygon *p, int x, int y)
 	return ret;
 }
 
+static long edge_point_dist2(struct vertex* e1, int x, int y)
+{
+	struct vertex* e2 = e1->next;
+	long l2 = dist2(e2->x, e2->y, e1->x, e1->y);
+
+	/* Arête de taille nulle */
+	if (l2 == 0)
+		return dist2(e1->x, e1->y, x, y);
+
+	double t = ((x - e1->x) * (e2->x - e1->x) + (y - e1->y) * (e2->y - e1->y)) / (double)l2;
+
+	/* Point qui dépasse du côté de e1 */
+	if (t < 0)
+		return dist2(e1->x, e1->y, x, y);
+
+	/* Point qui dépasse du côté de e2 */
+	if (t > 1)
+		return dist2(e2->x, e2->y, x, y);
+
+	/* Distance du projeté orthogonal sur la droite */
+	return dist2(e1->x + t * (e2->x - e1->x), e1->y + t * (e2->y - e1->y), x, y);
+}
+
 /* Renvoie l'arête la plus proche du clic */
 struct vertex* closestEdge(struct polygon *p, int x, int y)
 {
-	struct vertex* ret = closestVertex(p, x, y);
+	long mindist = -1;
+	struct vertex* ret = NULL;
+	long tmpdist;
+	struct vertex* v = NULL;
+	size_t i;
 
-	int d_next = 0;
-	int d_prev = 0;
+	if (p->v_list == NULL)
+		return NULL;
 
-	if (ret->prev != NULL)
-		d_prev = dist2(ret->prev->x, ret->prev->y, x, y);
-	if (ret->next != NULL)
-		d_next = dist2(ret->next->x, ret->next->y, x, y);
-
-	if (d_next == 0 || d_prev <= d_next)
-		return ret->prev;
-	else if (d_prev == 0 || d_prev > d_next)
-		return ret;
-	else
+	v = p->v_list;
+	for (i = 0; i < p->vertexcnt; i++)
 	{
-		perror("404 not found");
-		exit(EXIT_FAILURE);
+		tmpdist = edge_point_dist2(v, x, y);
+		if (mindist == -1 || tmpdist < mindist)
+		{
+			mindist = tmpdist;
+			ret = v;
+		}
+
+		v = v->next;
 	}
+
+	return ret;
 }
