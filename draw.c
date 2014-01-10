@@ -1015,20 +1015,30 @@ void drawing_free(struct drawing *d)
 	memset(d, 0, sizeof(*d));
 }
 
+/*
+ * Retourne le carré de la distance entre deux points
+ */
+static long dist2(int x1, int y1, int x2, int y2)
+{
+	int dx = x2 - x1;
+	int dy = y2 - y1;
+	return dx * dx + dy * dy;
+}
+
 /* Renvoie le point le plus proche du clic */
 struct vertex* closestVertex(struct polygon *p, int x, int y)
 {
 	if (p != NULL && p->v_list != NULL)
 	{
-		//Initialisation des paramètres de recherche
+		// Initialisation des paramètres de recherche
 		struct vertex* ret = p->v_list;
-		int min = (x - ret->x) * (x - ret->x) + (y - ret->y) * (y - ret->y);
+		int min = dist2(ret->x, ret->y, x, y);
 		int tmp;
 		struct vertex* cursor = ret->next;
 
 		do
 		{
-			tmp = (x - cursor->x) * (x - cursor->x) + (y - cursor->y) * (y - cursor->y);
+			tmp = dist2(cursor->x, cursor->y, x, y);
 			if (tmp < min)
 			{
 				min = tmp;
@@ -1055,9 +1065,9 @@ struct vertex* closestEdge(struct polygon *p, int x, int y)
 	int d_prev = 0;
 
 	if (ret->prev != NULL)
-		d_prev = (x - ret->prev->x) * (x - ret->prev->x) + (y - ret->prev->y) * (y - ret->prev->y);
+		d_prev = dist2(ret->prev->x, ret->prev->y, x, y);
 	if (ret->next != NULL)
-		d_next = (x - ret->next->x) * (x - ret->next->x) + (y - ret->next->y) * (y - ret->next->y);
+		d_next = dist2(ret->next->x, ret->next->y, x, y);
 
 	if (d_next == 0 || d_prev <= d_next)
 		return ret->prev;
