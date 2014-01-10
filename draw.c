@@ -3,6 +3,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+/*
+ * Affiche un message d'erreur correspondant à errno précédé
+ */
+static void system_error(const char *msg)
+{
+	perror(msg);
+	exit(EXIT_FAILURE);
+}
+
 /*
  * Ajoute un sommet à une liste de sommets.
  */
@@ -134,10 +144,7 @@ void drawing_new_polygon(struct drawing *d)
 
 	p = malloc(sizeof(*p));
 	if (p == NULL)
-	{
-		perror("malloc");
-		exit(EXIT_FAILURE);
-	}
+		system_error("malloc");
 
 	memset(p, 0, sizeof(*p));
 
@@ -585,10 +592,7 @@ static void polygon_fill(struct polygon* p, Image* img)
 
 	yvertex = malloc(p->vertexcnt * sizeof(*yvertex));
 	if (yvertex == NULL)
-	{
-		perror("malloc");
-		exit(EXIT_FAILURE);
-	}
+		system_error("malloc");
 
 	polygon_ysorted_vertex(p, yvertex);
 
@@ -610,10 +614,8 @@ static void polygon_fill(struct polygon* p, Image* img)
 		{
 			ae = malloc(sizeof(*ae));
 			if (ae == NULL)
-			{
-				perror("malloc");
-				exit(EXIT_FAILURE);
-			}
+				system_error("malloc");
+
 			active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->next, ael, ae);
 			ael = ae;
 			ael_size++;
@@ -622,10 +624,8 @@ static void polygon_fill(struct polygon* p, Image* img)
 		{
 			ae = malloc(sizeof(*ae));
 			if (ae == NULL)
-			{
-				perror("malloc");
-				exit(EXIT_FAILURE);
-			}
+				system_error("malloc");
+
 			active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->prev, ael, ae);
 			ael = ae;
 			ael_size++;
@@ -897,10 +897,8 @@ static void polygon_fill(struct polygon* p, Image* img)
 			{
 				ae = malloc(sizeof(*ae));
 				if (ae == NULL)
-				{
-					perror("malloc");
-					exit(EXIT_FAILURE);
-				}
+					system_error("malloc");
+
 				active_edge_init(v, v->next, ael, ae);
 				ael = ae;
 				ael_size++;
@@ -909,10 +907,8 @@ static void polygon_fill(struct polygon* p, Image* img)
 			{
 				ae = malloc(sizeof(*ae));
 				if (ae == NULL)
-				{
-					perror("malloc");
-					exit(EXIT_FAILURE);
-				}
+					system_error("malloc");
+
 				active_edge_init(v, v->prev, ael, ae);
 				ael = ae;
 				ael_size++;
