@@ -936,6 +936,15 @@ static void polygon_fill(struct polygon* p, Image* img)
 	free(yvertex);
 }
 
+static void vertex_square_around(struct vertex* v, int l, Image* img)
+{
+	l = l / 2;
+	segment_rasterize(img, v->x - l, v->y - l, v->x + l, v->y - l);
+	segment_rasterize(img, v->x - l, v->y - l, v->x - l, v->y + l);
+	segment_rasterize(img, v->x + l, v->y + l, v->x + l, v->y - l);
+	segment_rasterize(img, v->x + l, v->y + l, v->x - l, v->y + l);
+}
+
 void drawing_rasterize(struct drawing *d, Image *img, enum mode current_mode)
 {
 	struct polygon* p;
@@ -956,10 +965,7 @@ void drawing_rasterize(struct drawing *d, Image *img, enum mode current_mode)
 		if(current_mode == VERTEX && d->p_active != NULL && d->v_selected != NULL)
 		{
 			I_changeColor(img, green);
-			segment_rasterize(img, d->v_selected->x-5, d->v_selected->y-5, d->v_selected->x+5, d->v_selected->y-5);
-			segment_rasterize(img, d->v_selected->x-5, d->v_selected->y-5, d->v_selected->x-5, d->v_selected->y+5);
-			segment_rasterize(img, d->v_selected->x+5, d->v_selected->y+5, d->v_selected->x+5, d->v_selected->y-5);
-			segment_rasterize(img, d->v_selected->x+5, d->v_selected->y+5, d->v_selected->x-5, d->v_selected->y+5);
+			vertex_square_around(d->v_selected, 10, img);
 		}
 
 		if(current_mode == EDGE && d->p_active != NULL && d->v_selected != NULL && d->v_selected->next != NULL)
