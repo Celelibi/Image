@@ -1035,8 +1035,8 @@ struct vertex* closestVertex(struct polygon *p, int x, int y)
 
 	if (p == NULL || p->v_list == NULL)
 	{
-		perror("404 not found");
-		exit(EXIT_FAILURE);
+		fprintf(stderr, "404 not found\n");
+		return NULL;
 	}
 
 	cursor = p->v_list;
