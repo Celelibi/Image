@@ -1028,10 +1028,10 @@ static long dist2(int x1, int y1, int x2, int y2)
 /* Renvoie le point le plus proche du clic */
 struct vertex* closestVertex(struct polygon *p, int x, int y)
 {
-	struct vertex* ret;
-	int min;
-	int tmp;
-	struct vertex* cursor;
+	struct vertex* ret = NULL;
+	long min = -1, tmp;
+	struct vertex* cursor = NULL;
+	size_t i;
 
 	if (p == NULL || p->v_list == NULL)
 	{
@@ -1039,22 +1039,17 @@ struct vertex* closestVertex(struct polygon *p, int x, int y)
 		exit(EXIT_FAILURE);
 	}
 
-	// Initialisation des paramètres de recherche
-	ret = p->v_list;
-	min = dist2(ret->x, ret->y, x, y);
-	tmp;
-	cursor = ret->next;
-
-	do
+	cursor = p->v_list;
+	for (i = 0; i < p->vertexcnt; i++)
 	{
 		tmp = dist2(cursor->x, cursor->y, x, y);
-		if (tmp < min)
+		if (min == -1 || tmp < min)
 		{
 			min = tmp;
 			ret = cursor;
 		}
 		cursor = cursor->next;
-	} while (cursor != p->v_last->next); // Tant qu'on n'a pas étudié chaque sommet de p
+	}
 
 	return ret;
 }
