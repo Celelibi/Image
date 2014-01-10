@@ -1063,18 +1063,20 @@ static long edge_point_dist2(struct vertex* e1, int x, int y)
 	if (l2 == 0)
 		return dist2(e1->x, e1->y, x, y);
 
-	double t = ((x - e1->x) * (e2->x - e1->x) + (y - e1->y) * (e2->y - e1->y)) / (double)l2;
+	long tl2 = ((x - e1->x) * (e2->x - e1->x) + (y - e1->y) * (e2->y - e1->y));
 
 	/* Point qui dépasse du côté de e1 */
-	if (t < 0)
+	if (tl2 < 0)
 		return dist2(e1->x, e1->y, x, y);
 
 	/* Point qui dépasse du côté de e2 */
-	if (t > 1)
+	if (tl2 > l2)
 		return dist2(e2->x, e2->y, x, y);
 
 	/* Distance du projeté orthogonal sur la droite */
-	return dist2(e1->x + t * (e2->x - e1->x), e1->y + t * (e2->y - e1->y), x, y);
+	long hx = e1->x + tl2 * (e2->x - e1->x) / l2;
+	long hy = e1->y + tl2 * (e2->y - e1->y) / l2;
+	return dist2(hx, hy, x, y);
 }
 
 /* Renvoie l'arête la plus proche du clic */
