@@ -1028,32 +1028,35 @@ static long dist2(int x1, int y1, int x2, int y2)
 /* Renvoie le point le plus proche du clic */
 struct vertex* closestVertex(struct polygon *p, int x, int y)
 {
-	if (p != NULL && p->v_list != NULL)
-	{
-		// Initialisation des paramètres de recherche
-		struct vertex* ret = p->v_list;
-		int min = dist2(ret->x, ret->y, x, y);
-		int tmp;
-		struct vertex* cursor = ret->next;
+	struct vertex* ret;
+	int min;
+	int tmp;
+	struct vertex* cursor;
 
-		do
-		{
-			tmp = dist2(cursor->x, cursor->y, x, y);
-			if (tmp < min)
-			{
-				min = tmp;
-				ret = cursor;
-			}
-			cursor = cursor->next;
-		} while (cursor != p->v_last->next); // Tant qu'on n'a pas étudié chaque sommet de p
-
-		return ret;
-	}
-	else
+	if (p == NULL || p->v_list == NULL)
 	{
 		perror("404 not found");
 		exit(EXIT_FAILURE);
 	}
+
+	// Initialisation des paramètres de recherche
+	ret = p->v_list;
+	min = dist2(ret->x, ret->y, x, y);
+	tmp;
+	cursor = ret->next;
+
+	do
+	{
+		tmp = dist2(cursor->x, cursor->y, x, y);
+		if (tmp < min)
+		{
+			min = tmp;
+			ret = cursor;
+		}
+		cursor = cursor->next;
+	} while (cursor != p->v_last->next); // Tant qu'on n'a pas étudié chaque sommet de p
+
+	return ret;
 }
 
 /* Renvoie l'arête la plus proche du clic */
