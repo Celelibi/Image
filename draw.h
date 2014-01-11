@@ -4,15 +4,16 @@
 #include "Image.h"
 
 /*
-* Différents modes de fonctionnement du programme
-*/
+ * Différents modes de fonctionnement du programme
+ */
 enum mode {APPEND, VERTEX, EDGE};
 
 /*
-* Structure de liste chaînée pour stocker des coordonnées
-*/
+ * Structure de liste chaînée pour stocker des coordonnées
+ */
 
 struct vertex {
+	/* TODO: faire une struct point */
 	int x;
 	int y;
 	struct vertex* next;
@@ -20,8 +21,8 @@ struct vertex {
 };
 
 /*
-* Structure de liste chaînée pour stocker une liste de points
-*/
+ * Structure de liste chaînée pour stocker une liste de points
+ */
 
 struct polygon {
 	struct vertex* v_list;
@@ -32,8 +33,8 @@ struct polygon {
 };
 
 /*
-* Liste de polygones
-*/
+ * Liste de polygones
+ */
 
 struct drawing {
 	struct polygon* p_list;

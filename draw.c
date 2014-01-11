@@ -53,7 +53,8 @@ struct vertex* polygon_append_vertex(struct polygon* poly, int x, int y)
 /*
  * Crée un nouveau point en milieu de liste
  */
-struct vertex* polygon_insert_vertex_after(struct polygon* poly, struct vertex* v, int x, int y)
+struct vertex* polygon_insert_vertex_after(struct polygon* poly,
+                                           struct vertex* v, int x, int y)
 {
 	// Allocation
 	struct vertex* new = malloc(sizeof(*new));
@@ -82,7 +83,8 @@ struct vertex* polygon_insert_vertex_after(struct polygon* poly, struct vertex* 
 /*
  * Supprime un sommet de la liste.
  */
-struct vertex* polygon_remove_vertex(struct polygon* poly, struct vertex* victim)
+struct vertex* polygon_remove_vertex(struct polygon* poly,
+                                     struct vertex* victim)
 {
 	/*
 	 * Le successeur de la victime devient la nouvelle tête de liste.
@@ -108,7 +110,8 @@ struct vertex* polygon_remove_vertex(struct polygon* poly, struct vertex* victim
 }
 
 /*
- * Ferme un polygone overt et inversement. Renvoie 1 si le polygone vient d'être fermé, 0 sinon.
+ * Ferme un polygone overt et inversement.
+ * Renvoie 1 si le polygone vient d'être fermé, 0 sinon.
  */
 int polygon_toggle_close(struct polygon* poly)
 {
@@ -162,8 +165,8 @@ void drawing_new_polygon(struct drawing *d)
 }
 
 /*
-* Trace une droite de Bresenham entre deux sommets.
-*/
+ * Trace une droite de Bresenham entre deux sommets.
+ */
 void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 {
 	int dx = xB - xA;
@@ -172,6 +175,7 @@ void segment_rasterize(Image *img, int xA, int yA, int xB, int yB)
 	int x = xA;
 	int y = yA;
 
+	/* TODO: simplifier le code */
 	if (dx != 0)
 	{
 		if (dx > 0)
@@ -525,7 +529,8 @@ static struct active_edge* active_edge_sort(struct active_edge* ael, size_t size
 	return active_edge_merge_lists(ael1, ael2);
 }
 
-static void active_edge_init(struct vertex* vymin, struct vertex* vymax, struct active_edge* next, struct active_edge* ae)
+static void active_edge_init(struct vertex* vymin, struct vertex* vymax,
+                             struct active_edge* next, struct active_edge* ae)
 {
 	memset(ae, 0, sizeof(*ae));
 
@@ -545,7 +550,7 @@ static void active_edge_init(struct vertex* vymin, struct vertex* vymax, struct 
 		}
 		else
 		{
-			ae->x_err = ae->dy; // OK avec la version normale
+			ae->x_err = ae->dy;
 			ae->divfix_start = 0;
 			ae->divfix_end = 0;
 		}
@@ -560,7 +565,7 @@ static void active_edge_init(struct vertex* vymin, struct vertex* vymax, struct 
 		}
 		else
 		{
-			ae->x_err = -ae->dy; // OK avec la version normale
+			ae->x_err = -ae->dy;
 			ae->divfix_start = 0;
 			ae->divfix_end = 0;
 		}
@@ -941,7 +946,7 @@ void drawing_rasterize(struct drawing *d, Image *img, enum mode current_mode)
 	I_changeColor(img, white);
 
 	p = d->p_list;
-	while(p != NULL)
+	while (p != NULL)
 	{
 		polygon_rasterize(p, img);
 		if (p->is_filled)
@@ -950,17 +955,19 @@ void drawing_rasterize(struct drawing *d, Image *img, enum mode current_mode)
 		p = p->next;
 	}
 
-	if(current_mode == VERTEX && d->p_active != NULL && d->v_selected != NULL)
+	if (current_mode == VERTEX && d->p_active != NULL && d->v_selected != NULL)
 	{
 		I_changeColor(img, green);
 		vertex_square_around(d->v_selected, 10, img);
 		I_changeColor(img, white);
 	}
 
-	if(current_mode == EDGE && d->p_active != NULL && d->v_selected != NULL && d->v_selected->next != NULL)
+	if (current_mode == EDGE && d->p_active != NULL &&
+	   d->v_selected != NULL && d->v_selected->next != NULL)
 	{
 		I_changeColor(img, red);
-		segment_rasterize(img, d->v_selected->x, d->v_selected->y, d->v_selected->next->x, d->v_selected->next->y);
+		segment_rasterize(img, d->v_selected->x, d->v_selected->y,
+		                  d->v_selected->next->x, d->v_selected->next->y);
 		I_changeColor(img, white);
 	}
 }
