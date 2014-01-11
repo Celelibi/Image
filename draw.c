@@ -588,6 +588,7 @@ struct scanline_state {
 	/* Liste des arêtes actives */
 	struct active_edge* ael;
 	size_t ael_size;
+	int ael_need_sort;
 };
 
 
@@ -634,9 +635,11 @@ static void scan_line_add_vertex(struct scanline_state* sls, int y)
 		sls->yv_idx++;
 	}
 
+
 	/* Trie les active edge uniquement si on en a rajouté */
 	if (ael_size != sls->ael_size) {
-		sls->ael = active_edge_sort(ael, ael_size);
+		sls->ael = ael;
+		sls->ael_need_sort = 1;
 		sls->ael_size = ael_size;
 	}
 }
@@ -677,7 +680,8 @@ static void scan_line_active_edge_next(struct scanline_state* sls,
  * paep est un pointeur sur le pointeur vers ae. Généralement le champ "next" du
  * active_edge précédent. Parfois un pointeur sur la tête de liste ael.
  * Retourne le plus petit entre ae et ae->next */
-static struct active_edge* scan_line_ae_swap(struct active_edge** paep,
+static struct active_edge* scan_line_ae_swap(struct scanline_state* sls,
+                                             struct active_edge** paep,
                                              struct active_edge* ae)
 {
 	struct active_edge* aen = ae->next;
@@ -689,6 +693,10 @@ static struct active_edge* scan_line_ae_swap(struct active_edge** paep,
 		ae->next = aenn;
 		aen->next = ae;
 		*paep = aen;
+
+		/* Vérifie si on a besoin d'un vrai tri. */
+		if (*paep != NULL && (*paep)->x_inter > aen->x_inter)
+			sls->ael_need_sort = 1;
 
 		return aen;
 	}
@@ -711,9 +719,11 @@ static void scan_line(struct scanline_state* sls, int y, Image* img)
 	scan_line_add_vertex(sls, y);
 	ael = sls->ael;
 
-	/* TODO: Ne trier que quand des arêtes ont été ajoutées
-	 * Et échanger les arêtes qui ont été croisées sans appeller active_edge_sort */
-	ael = active_edge_sort(ael, sls->ael_size);
+	if (sls->ael_need_sort)
+	{
+		ael = active_edge_sort(ael, sls->ael_size);
+		sls->ael_need_sort = 0;
+	}
 
 
 	aepp = NULL;
@@ -774,18 +784,18 @@ static void scan_line(struct scanline_state* sls, int y, Image* img)
 		if (aep != NULL)
 		{
 			if (aepp != NULL)
-				aep = scan_line_ae_swap(&aepp->next, aep);
+				aep = scan_line_ae_swap(sls, &aepp->next, aep);
 			else
-				aep = scan_line_ae_swap(&ael, aep);
+				aep = scan_line_ae_swap(sls, &ael, aep);
 
 			ae = aep->next;
 		}
 
 		/* 2) Échange aen et ae si nécessaire */
 		if (aep != NULL)
-			ae = scan_line_ae_swap(&aep->next, ae);
+			ae = scan_line_ae_swap(sls, &aep->next, ae);
 		else
-			ae = scan_line_ae_swap(&ael, ae);
+			ae = scan_line_ae_swap(sls, &ael, ae);
 
 		aen = ae->next;
 
@@ -819,6 +829,7 @@ static void polygon_fill(struct polygon* p, Image* img)
 	sls.yv_idx = 0;
 	sls.ael = NULL;
 	sls.ael_size = 0;
+	sls.ael_need_sort = 0;
 
 	for (y = ymin; y <= ymax; y++)
 		scan_line(&sls, y, img);
