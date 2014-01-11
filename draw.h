@@ -80,9 +80,4 @@ struct vertex* closestVertex(struct polygon *p, int x, int y);
 /* Renvoie l'arête la plus proche du clique */
 struct vertex* closestEdge(struct polygon *p, int x, int y);
 
-/*
-* À ajouter si nécessaire :
-* Insertion d'un sommet en plein milieu de la liste
-*/
-
 #endif
