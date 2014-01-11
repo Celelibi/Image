@@ -588,44 +588,12 @@ static void polygon_fill(struct polygon* p, Image* img)
 		system_error("malloc");
 
 	polygon_ysorted_vertex(p, yvertex);
+	yvertex_bound_idx = 0;
 
 	/* TODO: mettre des segments à la place des vertex? */
 
 	ymin = yvertex[0]->y;
 	ymax = yvertex[p->vertexcnt - 1]->y;
-
-	/* Construit la liste initiale des active_edge */
-	/* TODO: merger ça avec l'ajout des sommets en ^ */
-	for (yvertex_bound_idx = 0; yvertex_bound_idx < p->vertexcnt && yvertex[yvertex_bound_idx]->y == ymin; yvertex_bound_idx++)
-	{
-		/* Les sommets du haut sont forcément des angles,
-		 * donc vont par deux */
-		struct active_edge *ae;
-
-		/* N'ajoute que les arêtes non-horizontales */
-		if (yvertex[yvertex_bound_idx]->next->y > ymin)
-		{
-			ae = malloc(sizeof(*ae));
-			if (ae == NULL)
-				system_error("malloc");
-
-			active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->next, ael, ae);
-			ael = ae;
-			ael_size++;
-		}
-		if (yvertex[yvertex_bound_idx]->prev->y > ymin)
-		{
-			ae = malloc(sizeof(*ae));
-			if (ae == NULL)
-				system_error("malloc");
-
-			active_edge_init(yvertex[yvertex_bound_idx], yvertex[yvertex_bound_idx]->prev, ael, ae);
-			ael = ae;
-			ael_size++;
-		}
-	}
-
-	ael = active_edge_sort(ael, ael_size);
 
 	for (y = ymin; y <= ymax; y++)
 	{
@@ -646,6 +614,11 @@ static void polygon_fill(struct polygon* p, Image* img)
 			if (v->next->y == y && v->prev->y == y)
 				continue;
 
+			/* TODO: gérer différemment les arêtes horizontales
+			 * 1) ici, toujours ajouter les arêtes qui descendent
+			 *    même si à côté l'arête est horizontale
+			 * 2) dans le remplacement d'arêtes "traversantes" ne
+			 *    pas ajouter les horizontales */
 			tmp = v->next;
 			while (tmp->y == y)
 				tmp = tmp->next;
