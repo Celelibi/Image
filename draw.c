@@ -634,8 +634,11 @@ static void scan_line_add_vertex(struct scanline_state* sls, int y)
 		sls->yv_idx++;
 	}
 
-	sls->ael = ael;
-	sls->ael_size = ael_size;
+	/* Trie les active edge uniquement si on en a rajouté */
+	if (ael_size != sls->ael_size) {
+		sls->ael = active_edge_sort(ael, ael_size);
+		sls->ael_size = ael_size;
+	}
 }
 
 /* Balaye une ligne du polygone */
@@ -654,7 +657,6 @@ static void scan_line(struct scanline_state* sls, int y, Image* img)
 	ael = sls->ael;
 	ael_size = sls->ael_size;
 
-	/* re-trie la liste des arêtes actives */
 	/* TODO: Ne trier que quand des arêtes ont été ajoutées
 	 * Et échanger les arêtes qui ont été croisées sans appeller active_edge_sort */
 	ael = active_edge_sort(ael, ael_size);
