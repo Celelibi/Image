@@ -680,17 +680,15 @@ static void scan_line(struct scanline_state* sls, int y, Image* img)
 
 	/* Raccourcis */
 	struct active_edge* ael;
-	size_t ael_size;
 
 
 	/* Ajoute les arêtes qui participent à un sommet en ^ */
 	scan_line_add_vertex(sls, y);
 	ael = sls->ael;
-	ael_size = sls->ael_size;
 
 	/* TODO: Ne trier que quand des arêtes ont été ajoutées
 	 * Et échanger les arêtes qui ont été croisées sans appeller active_edge_sort */
-	ael = active_edge_sort(ael, ael_size);
+	ael = active_edge_sort(ael, sls->ael_size);
 
 
 	aep = NULL;
@@ -707,8 +705,6 @@ static void scan_line(struct scanline_state* sls, int y, Image* img)
 				scan_line_active_edge_next(sls, &ae, &ael);
 			else
 				scan_line_active_edge_next(sls, &ae, &aep->next);
-
-			ael_size = sls->ael_size;
 		}
 
 		if (ae == NULL)
@@ -721,7 +717,6 @@ static void scan_line(struct scanline_state* sls, int y, Image* img)
 		while (aen->vymax->y == y)
 		{
 			scan_line_active_edge_next(sls, &aen, &ae->next);
-			ael_size = sls->ael_size;
 			aen = ae->next;
 		}
 
@@ -752,7 +747,6 @@ static void scan_line(struct scanline_state* sls, int y, Image* img)
 	}
 
 	sls->ael = ael;
-	sls->ael_size = ael_size;
 }
 
 static void polygon_fill(struct polygon* p, Image* img)
