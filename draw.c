@@ -641,6 +641,37 @@ static void scan_line_add_vertex(struct scanline_state* sls, int y)
 	}
 }
 
+/*  Remplacement de l'arête active ae par la suivante dans l'ordre des y
+ *  croissants */
+static void scan_line_active_edge_next(struct scanline_state* sls,
+                                       struct active_edge** ae,
+                                       struct active_edge** aep)
+{
+	/* Raccourcis */
+	struct active_edge* a = *ae;
+	struct active_edge* next = a->next;
+	struct vertex* vymax = a->vymax;
+	int y = vymax->y;
+
+	if (vymax->next->y > y)
+		active_edge_init(vymax, vymax->next, next, a);
+	else if (vymax->prev->y > y)
+		active_edge_init(vymax, vymax->prev, next, a);
+	else
+	{
+		/*
+		 * On a atteint un sommet en V (dont une des deux branches peut
+		 * être horizontale) on élimine l'arête. Le nombre d'arête
+		 * devient impaire mais c'est pas grave, l'autre arête sera
+		 * supprimée lors d'une prochaine itération.
+		 */
+		*aep = next;
+		*ae = next;
+		free(a);
+		sls->ael_size--;
+	}
+}
+
 /* Balaye une ligne du polygone */
 static void scan_line(struct scanline_state* sls, int y, Image* img)
 {
@@ -665,68 +696,33 @@ static void scan_line(struct scanline_state* sls, int y, Image* img)
 	aep = NULL;
 	ae = ael;
 
-	/* TODO: passer cette boucle dans une autre fonction */
+	/* Parcourt toutes les paires d'arêtes actives */
 	while (ae != NULL)
 	{
-		aen = ae->next;
-
-		/*  Remplacement de l'edge qu'on quitte par celui qui le remplace */
-		if (ae->vymax->y == y)
+		/* Supprime les premières arêtes actives si on a atteint le
+		 * bas */
+		while (ae != NULL && ae->vymax->y == y)
 		{
-			if (ae->vymax->next->y > y)
-				active_edge_init(ae->vymax, ae->vymax->next, ae->next, ae);
-			else if (ae->vymax->prev->y > y)
-				active_edge_init(ae->vymax, ae->vymax->prev, ae->next, ae);
+			if (aep == NULL)
+				scan_line_active_edge_next(sls, &ae, &ael);
 			else
-			{
-				/*
-				 * On a atteint un sommet en V (dont une
-				 * des deux branches peut être
-				 * horizontale) dans lequel on
-				 * coloriait, on élimine l'arête ae.
-				 * Le nombre d'arête devient impaire
-				 * mais c'est pas grave, l'autre arête
-				 * sera supprimée lors d'une prochaine
-				 * itération.
-				 */
-				if (aep == NULL)
-					ael = aen;
-				else
-					aep->next = aen;
+				scan_line_active_edge_next(sls, &ae, &aep->next);
 
-				free(ae);
-				ae = aen;
-				ael_size--;
-				continue;
-			}
+			ael_size = sls->ael_size;
 		}
 
-		if (aen->vymax->y == y)
+		if (ae == NULL)
+			break;
+
+		aen = ae->next;
+
+		/* Supprime les arêtes actives de fin de segment si on a atteint
+		 * le bas */
+		while (aen->vymax->y == y)
 		{
-			if (aen->vymax->next->y > y)
-				active_edge_init(aen->vymax, aen->vymax->next, aen->next, aen);
-			else if (aen->vymax->prev->y > y)
-				active_edge_init(aen->vymax, aen->vymax->prev, aen->next, aen);
-			else
-			{
-				/*
-				 * On a atteint un sommet en V (dont une
-				 * des deux branches peut être
-				 * horizontale) dans lequel on ne
-				 * coloriait pas, on élimine l'arête
-				 * aen.
-				 * Le nombre d'arête devient impaire
-				 * mais c'est pas grave, l'autre arête
-				 * sera supprimée lors d'une prochaine
-				 * itération.
-				 */
-
-				ae->next = aen->next;
-
-				free(aen);
-				ael_size--;
-				continue;
-			}
+			scan_line_active_edge_next(sls, &aen, &ae->next);
+			ael_size = sls->ael_size;
+			aen = ae->next;
 		}
 
 		for (x = ae->x_inter + 1; x < aen->x_inter; x++)
