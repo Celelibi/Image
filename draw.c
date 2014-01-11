@@ -431,72 +431,60 @@ struct active_edge {
 	struct active_edge* next;
 };
 
-static struct active_edge* active_edge_merge_lists(struct active_edge* ael1, struct active_edge* ael2)
-{
-	struct active_edge *ret, *retcur;
 
-	if (ael1->x_inter < ael2->x_inter)
-	{
-		ret = ael1;
-		ael1 = ael1->next;
+/* Internal function for active_edge_merge_lists.
+ * Do NOT call with any argument NULL */
+static void active_edge_pop_smallest(struct active_edge** ael1,
+                                     struct active_edge** ael2,
+                                     struct active_edge** ret)
+{
+	if (*ael1 == NULL && *ael2 == NULL) {
+		*ret = NULL;
 	}
-	else if (ael1->x_inter > ael2->x_inter)
+	else if (*ael2 == NULL)
 	{
-		ret = ael2;
-		ael2 = ael2->next;
+		*ret = *ael1;
+		*ael1 = (*ael1)->next;
+	}
+	else if (*ael1 == NULL)
+	{
+		*ret = *ael2;
+		*ael2 = (*ael2)->next;
+	}
+	else if ((*ael1)->x_inter < (*ael2)->x_inter)
+	{
+		*ret = *ael1;
+		*ael1 = (*ael1)->next;
+	}
+	else if ((*ael1)->x_inter > (*ael2)->x_inter)
+	{
+		*ret = *ael2;
+		*ael2 = (*ael2)->next;
 	}
 	/* In case of equality, sort by vymax->x */
-	else if (ael1->vymax->x <= ael2->vymax->x)
+	else if ((*ael1)->vymax->x <= (*ael2)->vymax->x)
 	{
-		ret = ael1;
-		ael1 = ael1->next;
+		*ret = *ael1;
+		*ael1 = (*ael1)->next;
 	}
 	else
 	{
-		ret = ael2;
-		ael2 = ael2->next;
+		*ret = *ael2;
+		*ael2 = (*ael2)->next;
 	}
+}
 
+static struct active_edge* active_edge_merge_lists(struct active_edge* ael1,
+                                                   struct active_edge* ael2)
+{
+	struct active_edge *ret, *retcur;
+
+	active_edge_pop_smallest(&ael1, &ael2, &ret);
 	retcur = ret;
 
-	while (ael1 != NULL && ael2 != NULL)
+	while (ael1 != NULL || ael2 != NULL)
 	{
-		if (ael1->x_inter < ael2->x_inter)
-		{
-			retcur->next = ael1;
-			ael1 = ael1->next;
-		}
-		else if (ael1->x_inter > ael2->x_inter)
-		{
-			retcur->next = ael2;
-			ael2 = ael2->next;
-		}
-		/* In case of equality, sort by vymax->x */
-		else if (ael1->vymax->x <= ael2->vymax->x)
-		{
-			retcur->next = ael1;
-			ael1 = ael1->next;
-		}
-		else
-		{
-			retcur->next = ael2;
-			ael2 = ael2->next;
-		}
-
-		retcur = retcur->next;
-	}
-
-	while (ael1 != NULL)
-	{
-		retcur->next = ael1;
-		ael1 = ael1->next;
-		retcur = retcur->next;
-	}
-
-	while (ael2 != NULL)
-	{
-		retcur->next = ael2;
-		ael2 = ael2->next;
+		active_edge_pop_smallest(&ael1, &ael2, &retcur->next);
 		retcur = retcur->next;
 	}
 
