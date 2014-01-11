@@ -74,10 +74,10 @@ void drawing_remove_polygon(struct drawing *d, struct polygon *p);
 /* Libère et vide toutes les structures d'une struct drawing */
 void drawing_free(struct drawing *d);
 
-/* Renvoie le point le plus proche du clic */
+/* Renvoie le point le plus proche du clique */
 struct vertex* closestVertex(struct polygon *p, int x, int y);
 
-/* Renvoie l'arête la plus proche du clic */
+/* Renvoie l'arête la plus proche du clique */
 struct vertex* closestEdge(struct polygon *p, int x, int y);
 
 /*

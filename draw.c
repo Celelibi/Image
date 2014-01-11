@@ -1021,7 +1021,7 @@ static long dist2(int x1, int y1, int x2, int y2)
 	return dx * dx + dy * dy;
 }
 
-/* Renvoie le point le plus proche du clic */
+/* Renvoie le point le plus proche du clique */
 struct vertex* closestVertex(struct polygon *p, int x, int y)
 {
 	struct vertex* ret = NULL;
@@ -1075,7 +1075,7 @@ static long edge_point_dist2(struct vertex* e1, int x, int y)
 	return dist2(hx, hy, x, y);
 }
 
-/* Renvoie l'arête la plus proche du clic */
+/* Renvoie l'arête la plus proche du clique */
 struct vertex* closestEdge(struct polygon *p, int x, int y)
 {
 	long mindist = -1;

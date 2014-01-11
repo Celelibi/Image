@@ -53,10 +53,10 @@ void mouse_CB(int button, int state, int x, int y)
 {
 	y = img->_height - y; // inversion
 
-	// Lors d'un clic sur le bouton gauche de la souris...
+	// Lors d'un clique sur le bouton gauche de la souris...
 	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
-		printf("--> clic détecté à %d, %d\n", x, y);
+		printf("--> clique détecté à %d, %d\n", x, y);
 
 		if(current_mode == APPEND)
 		{
