@@ -575,165 +575,196 @@ static void active_edge_init(struct vertex* vymin, struct vertex* vymax,
 	ae->next = next;
 }
 
+/* Cette structure représente l'état du scanline à mettre à jour et à
+ * transporter entre chaque ligne */
+struct scanline_state {
+	struct polygon* poly;
+
+	/* Liste des sommets du polygone */
+	struct vertex** yvertex;
+	/* Indice de yvertex qui représente la borne max de la zone courante */
+	size_t yv_idx;
+
+	/* Liste des arêtes actives */
+	struct active_edge* ael;
+	size_t ael_size;
+};
+
+/* Balaye une ligne du polygone */
+static void scan_line(struct scanline_state* sls, int y, Image* img)
+{
+	struct active_edge *aep, *ae, *aen; /* prev, current, next */
+	int x;
+
+	/* Raccourcis */
+	struct vertex** const yv = sls->yvertex;
+	struct active_edge* ael = sls->ael;
+	size_t ael_size = sls->ael_size;
+
+
+	/* Ajout des sommets en ^ */
+	while (sls->yv_idx < sls->poly->vertexcnt && yv[sls->yv_idx]->y == y)
+	{
+		struct vertex *v = yv[sls->yv_idx];
+		struct active_edge *aetmp;
+
+		/* N'ajoute que les sommets en ^
+		 * Même ceux dont un des côtés est horizontal.
+		 * Les sommets "traversants" la droite "y" sont déjà
+		 * gérés. */
+
+		if (v->next->y > y && v->prev->y >= y)
+		{
+			aetmp = malloc(sizeof(*aetmp));
+			if (aetmp == NULL)
+				system_error("malloc");
+
+			active_edge_init(v, v->next, ael, aetmp);
+			ael = aetmp;
+			ael_size++;
+		}
+		if (v->prev->y > y && v->next->y >= y)
+		{
+			aetmp = malloc(sizeof(*aetmp));
+			if (aetmp == NULL)
+				system_error("malloc");
+
+			active_edge_init(v, v->prev, ael, aetmp);
+			ael = aetmp;
+			ael_size++;
+		}
+
+		sls->yv_idx++;
+	}
+
+	/* re-trie la liste des arêtes actives */
+	/* TODO: Ne trier que quand des arêtes ont été ajoutées
+	 * Et échanger les arêtes qui ont été croisées sans appeller active_edge_sort */
+	ael = active_edge_sort(ael, ael_size);
+
+
+	aep = NULL;
+	ae = ael;
+
+	/* TODO: passer cette boucle dans une autre fonction */
+	while (ae != NULL)
+	{
+		aen = ae->next;
+
+		/*  Remplacement de l'edge qu'on quitte par celui qui le remplace */
+		if (ae->vymax->y == y)
+		{
+			if (ae->vymax->next->y > y)
+				active_edge_init(ae->vymax, ae->vymax->next, ae->next, ae);
+			else if (ae->vymax->prev->y > y)
+				active_edge_init(ae->vymax, ae->vymax->prev, ae->next, ae);
+			else
+			{
+				/*
+				 * On a atteint un sommet en V (dont une
+				 * des deux branches peut être
+				 * horizontale) dans lequel on
+				 * coloriait, on élimine l'arête ae.
+				 * Le nombre d'arête devient impaire
+				 * mais c'est pas grave, l'autre arête
+				 * sera supprimée lors d'une prochaine
+				 * itération.
+				 */
+				if (aep == NULL)
+					ael = aen;
+				else
+					aep->next = aen;
+
+				free(ae);
+				ae = aen;
+				ael_size--;
+				continue;
+			}
+		}
+
+		if (aen->vymax->y == y)
+		{
+			if (aen->vymax->next->y > y)
+				active_edge_init(aen->vymax, aen->vymax->next, aen->next, aen);
+			else if (aen->vymax->prev->y > y)
+				active_edge_init(aen->vymax, aen->vymax->prev, aen->next, aen);
+			else
+			{
+				/*
+				 * On a atteint un sommet en V (dont une
+				 * des deux branches peut être
+				 * horizontale) dans lequel on ne
+				 * coloriait pas, on élimine l'arête
+				 * aen.
+				 * Le nombre d'arête devient impaire
+				 * mais c'est pas grave, l'autre arête
+				 * sera supprimée lors d'une prochaine
+				 * itération.
+				 */
+
+				ae->next = aen->next;
+
+				free(aen);
+				ael_size--;
+				continue;
+			}
+		}
+
+		for (x = ae->x_inter + 1; x < aen->x_inter; x++)
+			I_plot(img, x, y);
+
+		/* TODO: swaper ae avec ses voisins si on vient de les
+		 * croiser.
+		 * /!\ Attention aux modifications de la liste ael
+		 * pendant son parcourt. */
+		ae->x_err += ae->dx;
+		{
+			int xdiff = (ae->x_err + ae->divfix_start) / ae->dy;
+			ae->x_inter += xdiff;
+			ae->x_err -= xdiff * ae->dy;
+		}
+
+		/* TODO: idem aen */
+		aen->x_err += aen->dx;
+		{
+			int xdiff = (aen->x_err + aen->divfix_end) / aen->dy;
+			aen->x_inter += xdiff;
+			aen->x_err -= xdiff * aen->dy;
+		}
+
+		aep = aen;
+		ae = aen->next;
+	}
+
+	sls->ael = ael;
+	sls->ael_size = ael_size;
+}
+
 static void polygon_fill(struct polygon* p, Image* img)
 {
-	struct vertex** yvertex = NULL;
-	size_t yvertex_bound_idx;
 	int ymin, ymax, y;
-	struct active_edge* ael = NULL;
-	size_t ael_size = 0;
+	struct vertex** yvertex;
+	struct scanline_state sls;
+
+	memset(&sls, 0, sizeof(sls));
 
 	yvertex = malloc(p->vertexcnt * sizeof(*yvertex));
 	if (yvertex == NULL)
 		system_error("malloc");
 
 	polygon_ysorted_vertex(p, yvertex);
-	yvertex_bound_idx = 0;
-
-	/* TODO: mettre des segments à la place des vertex? */
 
 	ymin = yvertex[0]->y;
 	ymax = yvertex[p->vertexcnt - 1]->y;
 
+	sls.poly = p;
+	sls.yvertex = yvertex;
+	sls.yv_idx = 0;
+	sls.ael = NULL;
+	sls.ael_size = 0;
+
 	for (y = ymin; y <= ymax; y++)
-	{
-		struct active_edge *aep, *ae, *aen; /* prev, current, next */
-		int x;
-
-		/* Ajout des sommets en ^ */
-		while (yvertex_bound_idx < p->vertexcnt && yvertex[yvertex_bound_idx]->y == y)
-		{
-			struct vertex *v = yvertex[yvertex_bound_idx];
-			struct active_edge *ae;
-
-			/* N'ajoute que les sommets en ^
-			 * Même ceux dont un des côtés est horizontal.
-			 * Les sommets "traversants" la droite "y" sont déjà
-			 * gérés. */
-
-			if (v->next->y > y && v->prev->y >= y)
-			{
-				ae = malloc(sizeof(*ae));
-				if (ae == NULL)
-					system_error("malloc");
-
-				active_edge_init(v, v->next, ael, ae);
-				ael = ae;
-				ael_size++;
-			}
-			if (v->prev->y > y && v->next->y >= y)
-			{
-				ae = malloc(sizeof(*ae));
-				if (ae == NULL)
-					system_error("malloc");
-
-				active_edge_init(v, v->prev, ael, ae);
-				ael = ae;
-				ael_size++;
-			}
-
-			yvertex_bound_idx++;
-		}
-
-		/* re-trie la liste des arêtes actives */
-		/* TODO: Ne trier que quand des arêtes ont été ajoutées
-		 * Et échanger les arêtes qui ont été croisées sans appeller active_edge_sort */
-		ael = active_edge_sort(ael, ael_size);
-
-
-		aep = NULL;
-		ae = ael;
-
-		/* TODO: passer cette boucle dans une autre fonction */
-		while (ae != NULL)
-		{
-			aen = ae->next;
-
-			/*  Remplacement de l'edge qu'on quitte par celui qui le remplace */
-			if (ae->vymax->y == y)
-			{
-				if (ae->vymax->next->y > y)
-					active_edge_init(ae->vymax, ae->vymax->next, ae->next, ae);
-				else if (ae->vymax->prev->y > y)
-					active_edge_init(ae->vymax, ae->vymax->prev, ae->next, ae);
-				else
-				{
-					/*
-					 * On a atteint un sommet en V (dont une
-					 * des deux branches peut être
-					 * horizontale) dans lequel on
-					 * coloriait, on élimine l'arête ae.
-					 * Le nombre d'arête devient impaire
-					 * mais c'est pas grave, l'autre arête
-					 * sera supprimée lors d'une prochaine
-					 * itération.
-					 */
-					if (aep == NULL)
-						ael = aen;
-					else
-						aep->next = aen;
-
-					free(ae);
-					ae = aen;
-					ael_size--;
-					continue;
-				}
-			}
-
-			if (aen->vymax->y == y)
-			{
-				if (aen->vymax->next->y > y)
-					active_edge_init(aen->vymax, aen->vymax->next, aen->next, aen);
-				else if (aen->vymax->prev->y > y)
-					active_edge_init(aen->vymax, aen->vymax->prev, aen->next, aen);
-				else
-				{
-					/*
-					 * On a atteint un sommet en V (dont une
-					 * des deux branches peut être
-					 * horizontale) dans lequel on ne
-					 * coloriait pas, on élimine l'arête
-					 * aen.
-					 * Le nombre d'arête devient impaire
-					 * mais c'est pas grave, l'autre arête
-					 * sera supprimée lors d'une prochaine
-					 * itération.
-					 */
-
-					ae->next = aen->next;
-
-					free(aen);
-					ael_size--;
-					continue;
-				}
-			}
-
-			for (x = ae->x_inter + 1; x < aen->x_inter; x++)
-				I_plot(img, x, y);
-
-			/* TODO: swaper ae avec ses voisins si on vient de les
-			 * croiser.
-			 * /!\ Attention aux modifications de la liste ael
-			 * pendant son parcourt. */
-			ae->x_err += ae->dx;
-			{
-				int xdiff = (ae->x_err + ae->divfix_start) / ae->dy;
-				ae->x_inter += xdiff;
-				ae->x_err -= xdiff * ae->dy;
-			}
-
-			/* TODO: idem aen */
-			aen->x_err += aen->dx;
-			{
-				int xdiff = (aen->x_err + aen->divfix_end) / aen->dy;
-				aen->x_inter += xdiff;
-				aen->x_err -= xdiff * aen->dy;
-			}
-
-			aep = aen;
-			ae = aen->next;
-		}
-	}
+		scan_line(&sls, y, img);
 
 	free(yvertex);
 }
