@@ -56,7 +56,7 @@ void mouse_CB(int button, int state, int x, int y)
 	// Lors d'un clique sur le bouton gauche de la souris...
 	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
-		printf("--> clique détecté à %d, %d\n", x, y);
+		printf("--> clic détecté à %d, %d\n", x, y);
 
 		if(current_mode == APPEND)
 		{
@@ -118,7 +118,7 @@ void keyboard_CB(unsigned char key, int x, int y)
 		glutLeaveMainLoop();
 		break;
 	case 127: // Suppr
-		if(drawing.p_active->v_list != NULL)
+		if(drawing.p_active != NULL && drawing.p_active->v_list != NULL)
 		{
 			if(current_mode == APPEND)
 				polygon_remove_vertex(drawing.p_active, drawing.p_active->v_last);
