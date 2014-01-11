@@ -672,10 +672,35 @@ static void scan_line_active_edge_next(struct scanline_state* sls,
 	}
 }
 
+/* Échange ae et son successeur dans la liste des active edge s'ils ne sont pas
+ * triés selon leur x_inter. Le successeur doit exister.
+ * paep est un pointeur sur le pointeur vers ae. Généralement le champ "next" du
+ * active_edge précédent. Parfois un pointeur sur la tête de liste ael.
+ * Retourne le plus petit entre ae et ae->next */
+static struct active_edge* scan_line_ae_swap(struct active_edge** paep,
+                                             struct active_edge* ae)
+{
+	struct active_edge* aen = ae->next;
+	struct active_edge* aenn = aen->next;
+
+	if (ae->x_inter > aen->x_inter)
+	{
+		/* Re-link the active edge list */
+		ae->next = aenn;
+		aen->next = ae;
+		*paep = aen;
+
+		return aen;
+	}
+
+	return ae;
+}
+
 /* Balaye une ligne du polygone */
 static void scan_line(struct scanline_state* sls, int y, Image* img)
 {
-	struct active_edge *aep, *ae, *aen; /* prev, current, next */
+	/* prevprev, prev, current, next */
+	struct active_edge *aepp, *aep, *ae, *aen;
 	int x;
 
 	/* Raccourcis */
@@ -691,6 +716,7 @@ static void scan_line(struct scanline_state* sls, int y, Image* img)
 	ael = active_edge_sort(ael, sls->ael_size);
 
 
+	aepp = NULL;
 	aep = NULL;
 	ae = ael;
 
@@ -723,10 +749,6 @@ static void scan_line(struct scanline_state* sls, int y, Image* img)
 		for (x = ae->x_inter + 1; x < aen->x_inter; x++)
 			I_plot(img, x, y);
 
-		/* TODO: swaper ae avec ses voisins si on vient de les
-		 * croiser.
-		 * /!\ Attention aux modifications de la liste ael
-		 * pendant son parcourt. */
 		ae->x_err += ae->dx;
 		{
 			int xdiff = (ae->x_err + ae->divfix_start) / ae->dy;
@@ -734,7 +756,6 @@ static void scan_line(struct scanline_state* sls, int y, Image* img)
 			ae->x_err -= xdiff * ae->dy;
 		}
 
-		/* TODO: idem aen */
 		aen->x_err += aen->dx;
 		{
 			int xdiff = (aen->x_err + aen->divfix_end) / aen->dy;
@@ -742,6 +763,33 @@ static void scan_line(struct scanline_state* sls, int y, Image* img)
 			aen->x_err -= xdiff * aen->dy;
 		}
 
+		/* Tente de maintenir l'ordre
+		 * La plupart du temps, seules 2 arrêtes se croisent, donc ces
+		 * inversions sont suffisantes. Si elles ne le sont pas, on
+		 * lancera un vrai tri.
+		 * /!\ Attention, on ne touche pas à la suite de la liste après
+		 * aen */
+
+		/* 1) Échange ae et son prédécesseur si nécessaire */
+		if (aep != NULL)
+		{
+			if (aepp != NULL)
+				aep = scan_line_ae_swap(&aepp->next, aep);
+			else
+				aep = scan_line_ae_swap(&ael, aep);
+
+			ae = aep->next;
+		}
+
+		/* 2) Échange aen et ae si nécessaire */
+		if (aep != NULL)
+			ae = scan_line_ae_swap(&aep->next, ae);
+		else
+			ae = scan_line_ae_swap(&ael, ae);
+
+		aen = ae->next;
+
+		aepp = ae;
 		aep = aen;
 		ae = aen->next;
 	}
