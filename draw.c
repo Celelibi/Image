@@ -735,11 +735,6 @@ static void polygon_fill(struct polygon* p, Image* img)
 		}
 	}
 
-	while (ael != NULL) {
-		struct active_edge* ae = ael->next;
-		free(ael);
-		ael = ae;
-	}
 	free(yvertex);
 }
 
