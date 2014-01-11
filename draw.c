@@ -632,6 +632,62 @@ static void polygon_fill(struct polygon* p, Image* img)
 		struct active_edge *aep, *ae, *aen; /* prev, current, next */
 		int x;
 
+		/* Ajout des sommets en ^ */
+		while (yvertex_bound_idx < p->vertexcnt && yvertex[yvertex_bound_idx]->y == y)
+		{
+			struct vertex *v = yvertex[yvertex_bound_idx];
+			struct active_edge *ae;
+			int next_has_greater;
+			int prev_has_greater;
+			struct vertex *tmp;
+
+			/* Ce sommet est au milieu d'une suite d'arêtes horizontales
+			 * on ne cherche pas à ajouter une seule de ces arêtes */
+			if (v->next->y == y && v->prev->y == y)
+				continue;
+
+			tmp = v->next;
+			while (tmp->y == y)
+				tmp = tmp->next;
+			next_has_greater = tmp->y > y;
+
+			tmp = v->prev;
+			while (tmp->y == y)
+				tmp = tmp->prev;
+			prev_has_greater = tmp->y > y;
+
+
+			/* N'ajoute que les arêtes non-horizontales */
+			if (v->next->y > y && prev_has_greater)
+			{
+				ae = malloc(sizeof(*ae));
+				if (ae == NULL)
+					system_error("malloc");
+
+				active_edge_init(v, v->next, ael, ae);
+				ael = ae;
+				ael_size++;
+			}
+			if (v->prev->y > y && next_has_greater)
+			{
+				ae = malloc(sizeof(*ae));
+				if (ae == NULL)
+					system_error("malloc");
+
+				active_edge_init(v, v->prev, ael, ae);
+				ael = ae;
+				ael_size++;
+			}
+
+			yvertex_bound_idx++;
+		}
+
+		/* re-trie la liste des arêtes actives */
+		/* TODO: Ne trier que quand des arêtes ont été ajoutées
+		 * Et échanger les arêtes qui ont été croisées sans appeller active_edge_sort */
+		ael = active_edge_sort(ael, ael_size);
+
+
 		aep = NULL;
 		ae = ael;
 
@@ -859,62 +915,6 @@ static void polygon_fill(struct polygon* p, Image* img)
 			aep = aen;
 			ae = aen->next;
 		}
-
-		/* Ajout des sommets en ^ */
-		while (yvertex_bound_idx < p->vertexcnt && yvertex[yvertex_bound_idx]->y == y)
-		{
-			struct vertex *v = yvertex[yvertex_bound_idx];
-			struct active_edge *ae;
-			int next_has_greater;
-			int prev_has_greater;
-			struct vertex *tmp;
-
-			/* Ce sommet est au milieu d'une suite d'arêtes horizontales
-			 * on ne cherche pas à ajouter une seule de ces arêtes */
-			if (v->next->y == y && v->prev->y == y)
-				continue;
-
-			tmp = v->next;
-			while (tmp->y == y)
-				tmp = tmp->next;
-			next_has_greater = tmp->y > y;
-
-			tmp = v->prev;
-			while (tmp->y == y)
-				tmp = tmp->prev;
-			prev_has_greater = tmp->y > y;
-
-
-			/* N'ajoute que les arêtes non-horizontales */
-			if (v->next->y > y && prev_has_greater)
-			{
-				ae = malloc(sizeof(*ae));
-				if (ae == NULL)
-					system_error("malloc");
-
-				active_edge_init(v, v->next, ael, ae);
-				ael = ae;
-				ael_size++;
-			}
-			if (v->prev->y > y && next_has_greater)
-			{
-				ae = malloc(sizeof(*ae));
-				if (ae == NULL)
-					system_error("malloc");
-
-				active_edge_init(v, v->prev, ael, ae);
-				ael = ae;
-				ael_size++;
-			}
-
-			yvertex_bound_idx++;
-		}
-
-		/* re-trie la liste des arêtes actives */
-		/* TODO: Ne trier que quand des arêtes ont été ajoutées
-		 * Et échanger les arêtes qui ont été croisées sans appeller active_edge_sort */
-		ael = active_edge_sort(ael, ael_size);
-
 	}
 
 	while (ael != NULL) {
