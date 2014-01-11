@@ -590,19 +590,16 @@ struct scanline_state {
 	size_t ael_size;
 };
 
-/* Balaye une ligne du polygone */
-static void scan_line(struct scanline_state* sls, int y, Image* img)
-{
-	struct active_edge *aep, *ae, *aen; /* prev, current, next */
-	int x;
 
+/* Ajoute à la liste des active edge les arêtes qui participent à un sommet en ^
+ * et dont le ymin est égale à y */
+static void scan_line_add_vertex(struct scanline_state* sls, int y)
+{
 	/* Raccourcis */
-	struct vertex** const yv = sls->yvertex;
+	struct vertex** yv = sls->yvertex;
 	struct active_edge* ael = sls->ael;
 	size_t ael_size = sls->ael_size;
 
-
-	/* Ajout des sommets en ^ */
 	while (sls->yv_idx < sls->poly->vertexcnt && yv[sls->yv_idx]->y == y)
 	{
 		struct vertex *v = yv[sls->yv_idx];
@@ -636,6 +633,26 @@ static void scan_line(struct scanline_state* sls, int y, Image* img)
 
 		sls->yv_idx++;
 	}
+
+	sls->ael = ael;
+	sls->ael_size = ael_size;
+}
+
+/* Balaye une ligne du polygone */
+static void scan_line(struct scanline_state* sls, int y, Image* img)
+{
+	struct active_edge *aep, *ae, *aen; /* prev, current, next */
+	int x;
+
+	/* Raccourcis */
+	struct active_edge* ael;
+	size_t ael_size;
+
+
+	/* Ajoute les arêtes qui participent à un sommet en ^ */
+	scan_line_add_vertex(sls, y);
+	ael = sls->ael;
+	ael_size = sls->ael_size;
 
 	/* re-trie la liste des arêtes actives */
 	/* TODO: Ne trier que quand des arêtes ont été ajoutées
