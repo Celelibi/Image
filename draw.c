@@ -431,7 +431,7 @@ struct active_edge {
 	struct active_edge* next;
 };
 
-struct active_edge* active_edge_merge_lists(struct active_edge* ael1, struct active_edge* ael2)
+static struct active_edge* active_edge_merge_lists(struct active_edge* ael1, struct active_edge* ael2)
 {
 	struct active_edge *ret, *retcur;
 
@@ -505,7 +505,7 @@ struct active_edge* active_edge_merge_lists(struct active_edge* ael1, struct act
 	return ret;
 }
 
-struct active_edge* active_edge_sort(struct active_edge* ael, size_t size)
+static struct active_edge* active_edge_sort(struct active_edge* ael, size_t size)
 {
 	struct active_edge *ael1, *ael2;
 	size_t size1, size2;
@@ -537,7 +537,7 @@ struct active_edge* active_edge_sort(struct active_edge* ael, size_t size)
 	return active_edge_merge_lists(ael1, ael2);
 }
 
-void active_edge_init(struct vertex* vymin, struct vertex* vymax, struct active_edge* next, struct active_edge* ae)
+static void active_edge_init(struct vertex* vymin, struct vertex* vymax, struct active_edge* next, struct active_edge* ae)
 {
 	memset(ae, 0, sizeof(*ae));
 
