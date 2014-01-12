@@ -433,11 +433,27 @@ struct active_edge {
 	int dx;
 	int dy;
 	struct active_edge* next;
+
+	/* Champs utilisés pour le natural merge sort */
+	size_t runsize;
+	struct active_edge* nextrun;
 };
 
 
-/* Internal function for active_edge_merge_lists.
- * Do NOT call with any argument NULL */
+static int active_edge_cmp(struct active_edge* ae1, struct active_edge* ae2)
+{
+	int ret;
+
+	ret = ae1->x_inter - ae2->x_inter;
+	if (ret != 0)
+		return ret;
+
+	ret = ae1->vymax->x - ae2->vymax->x;
+	return ret;
+}
+
+/* Fonction interne pour active_edge_merge_runs
+ * Ne PAS appeller avec un argument NULL */
 static void active_edge_pop_smallest(struct active_edge** ael1,
                                      struct active_edge** ael2,
                                      struct active_edge** ret)
@@ -455,18 +471,7 @@ static void active_edge_pop_smallest(struct active_edge** ael1,
 		*ret = *ael2;
 		*ael2 = (*ael2)->next;
 	}
-	else if ((*ael1)->x_inter < (*ael2)->x_inter)
-	{
-		*ret = *ael1;
-		*ael1 = (*ael1)->next;
-	}
-	else if ((*ael1)->x_inter > (*ael2)->x_inter)
-	{
-		*ret = *ael2;
-		*ael2 = (*ael2)->next;
-	}
-	/* In case of equality, sort by vymax->x */
-	else if ((*ael1)->vymax->x <= (*ael2)->vymax->x)
+	else if (active_edge_cmp(*ael1, *ael2) <= 0)
 	{
 		*ret = *ael1;
 		*ael1 = (*ael1)->next;
@@ -478,55 +483,128 @@ static void active_edge_pop_smallest(struct active_edge** ael1,
 	}
 }
 
-static struct active_edge* active_edge_merge_lists(struct active_edge* ael1,
-                                                   struct active_edge* ael2)
+/* Merge deux runs, et PAS deux listes de run. Et produit un seul run. */
+static struct active_edge* active_edge_merge_runs(struct active_edge* run1,
+                                                  struct active_edge* run2)
 {
 	struct active_edge *ret, *retcur;
+	size_t totalsize = run1->runsize + run2->runsize;
 
-	active_edge_pop_smallest(&ael1, &ael2, &ret);
+	/* Supprime les infos de "run", on reconstruira un run à la fin.
+	 * /!\ Les états intermédiaires ne forment pas de run valide. */
+	/* Note: On ne merge que des run uniques, donc nextrun == NULL */
+	/*run1->nextrun = NULL;
+	run2->nextrun = NULL;*/
+	run1->runsize = 0;
+	run2->runsize = 0;
+
+	active_edge_pop_smallest(&run1, &run2, &ret);
 	retcur = ret;
 
-	while (ael1 != NULL || ael2 != NULL)
+	while (run1 != NULL || run2 != NULL)
 	{
-		active_edge_pop_smallest(&ael1, &ael2, &retcur->next);
+		active_edge_pop_smallest(&run1, &run2, &retcur->next);
 		retcur = retcur->next;
 	}
 
 	retcur->next = NULL;
 
+	/* Forme un run valide */
+	ret->nextrun = NULL;
+	ret->runsize = totalsize;
+
 	return ret;
+}
+
+/* Trie une liste de "run" au lieu d'une liste d'edge
+ * "size" est le nombre d'active_edge, pas le nombre de runs */
+static struct active_edge* active_edge_sort_runs(struct active_edge* runl,
+                                                 size_t size)
+{
+	struct active_edge *prevrun, *runl1, *runl2;
+	size_t size1, size2;
+
+	/* Un run unique est déjà trié. */
+	if (runl == NULL || runl->nextrun == NULL)
+		return runl;
+
+	/* Coupe la liste de runs en deux liste contenant à peu près le même
+	 * nombre d'active edge. */
+	runl1 = runl;
+
+	size1 = 0;
+	size2 = size;
+	prevrun = runl1;
+	runl2 = runl1;
+	while (runl2 != NULL && size1 < size2 - runl2->runsize)
+	{
+		size1 += runl2->runsize;
+		size2 -= runl2->runsize;
+		prevrun = runl2;
+		runl2 = runl2->nextrun;
+	}
+
+	prevrun->nextrun = NULL;
+
+	/* Trie les deux listes de run et produit deux runs triés (et pas deux
+	 * listes de run) */
+	runl1 = active_edge_sort_runs(runl1, size1);
+	runl2 = active_edge_sort_runs(runl2, size2);
+
+	/* Merge les deux moitiés de listes */
+	return active_edge_merge_runs(runl1, runl2);
+}
+
+/* Remplit le champ runsize de ael et retourne le premier élément ne faisant pas
+ * parti du run */
+static struct active_edge* active_edge_build_cur_run(struct active_edge* ael)
+{
+	size_t size;
+	struct active_edge *ae, *aep;
+
+	if (ael == NULL)
+		return NULL;
+
+	size = 1;
+	aep = ael;
+	ae = aep->next;
+	while (ae != NULL && active_edge_cmp(aep, ae) < 0)
+	{
+		size++;
+		aep = ae;
+		ae = ae->next;
+	}
+
+	aep->next = NULL;
+	ael->runsize = size;
+	return ae;
+}
+
+static struct active_edge* active_edge_build_runs(struct active_edge* ael)
+{
+	struct active_edge *run;
+	struct active_edge *ae;
+
+	run = ael;
+	while ((ae = active_edge_build_cur_run(run)))
+	{
+		run->nextrun = ae;
+		run = ae;
+	}
+
+	run->nextrun = NULL;
+
+	return ael;
 }
 
 static struct active_edge* active_edge_sort(struct active_edge* ael, size_t size)
 {
-	struct active_edge *ael1, *ael2;
-	size_t size1, size2;
-
-	if (size == 1)
-		ael->next = NULL;
-
-	if (size <= 1)
-		return ael;
-
-	/* TODO: Améliorer cet algo en découpant en "runs" */
-	/* Coupe la liste en deux */
-	ael1 = ael;
-	size1 = size / 2;
-
-	ael2 = ael1;
-	size2 = size;
-	while (size2 != size - size1)
-	{
-		ael2 = ael2->next;
-		size2--;
-	}
-
-	/* Trie les deux moitiés de liste */
-	ael1 = active_edge_sort(ael1, size1);
-	ael2 = active_edge_sort(ael2, size2);
-
-	/* Merge les deux moitiés de listes */
-	return active_edge_merge_lists(ael1, ael2);
+	struct active_edge* runs;
+	runs = active_edge_build_runs(ael);
+	runs = active_edge_sort_runs(runs, size);
+	runs->runsize = 0;
+	runs->nextrun = NULL;
+	return runs;
 }
 
 static void active_edge_init(struct vertex* vymin, struct vertex* vymax,
